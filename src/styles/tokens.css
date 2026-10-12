@@ -1,0 +1,28 @@
+/* Muted lacquer palette. Flat colours only: no gradients anywhere, including canvas and shaders.
+   The vibrant set this was dialled back from lives in design/prototype/palettes.json. */
+:root {
+  --red: #C8352A;
+  --red-d: #92241C;
+  --gold: #EBB24A;
+  --gold-d: #C28A28;
+  --jade: #1F8A68;
+  --jade-d: #166A50;
+  --cobalt: #2E46AE;
+  --cobalt-l: #3A53BC;
+  --navy: #1A2352;
+  --peony: #DD6886;
+  --ink: #15101A;
+  --paper: #F4EAD6;
+  --unlit: #4C2422;
+  --unlit-ch: #8A463A;
+  --w0: #2A40A0;
+  --w1: #2E46AE;
+  --w2: #3A53BC;
+  --w3: #5570D0;
+  --w4: #9DAEE2;
+  --petal-1: #E79DB2;
+  --petal-2: #F1C9D4;
+  --petal-3: #F4EAD6;
+  --petal-4: #EBB24A;
+  --petal-5: #DD6886;
+}

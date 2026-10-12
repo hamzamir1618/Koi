@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>KOI · Dragon Gate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@900&family=Azeret+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  /*PALETTE*/
+  --zh:'Ma Shan Zheng','KaiTi',serif; --sealf:'Noto Serif SC','SimSun',serif;
+  --disp:'Cormorant Garamond',Georgia,serif; --body:'EB Garamond',Georgia,serif; --mono:'Azeret Mono',ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--ink)}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+html.locked,html.locked body{overflow:hidden}
+body{background:var(--ink);color:var(--paper);font-family:var(--body);font-size:18px;line-height:1.6;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+img{display:block;user-select:none;-webkit-user-drag:none}
+button,input{font:inherit;color:inherit}
+h1,h2,h3{font-weight:inherit;text-wrap:balance}
+.zh{font-family:var(--zh)}
+.label{font-family:var(--mono);font-size:.7rem;letter-spacing:.22em;text-transform:uppercase}
+
+/* ── shared pieces ─────────────────────────────── */
+.seal{position:relative;display:inline-grid;place-items:center;flex:none;width:var(--s,64px);height:var(--s,64px);
+  background:var(--sbg,var(--red));color:var(--sfg,var(--paper));font-family:var(--sealf);font-weight:900;
+  font-size:calc(var(--s,64px)*.5);line-height:1;border-radius:7%;
+  box-shadow:inset 0 0 0 calc(var(--s,64px)*.06) var(--sbg,var(--red)),inset 0 0 0 calc(var(--s,64px)*.09) var(--sfg,var(--paper))}
+.slam-ring{position:absolute;inset:-6%;border-radius:10%;box-shadow:0 0 0 3px var(--sbg,var(--red));pointer-events:none}
+.btn{display:inline-flex;align-items:center;gap:.75em;font-family:var(--mono);font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+  padding:1.05em 1.7em;border-radius:999px;text-decoration:none;border:0;cursor:pointer;white-space:nowrap}
+.btn .zh{font-size:1.25rem;letter-spacing:0;text-transform:none;line-height:.8}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-ink{background:var(--ink);color:var(--paper)}
+.btn-line{background:transparent;color:var(--paper);box-shadow:inset 0 0 0 2px var(--paper)}
+.btn:focus-visible,.rail button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+/* ── cursor ───────────────────────────────────── */
+.cur{position:fixed;left:0;top:0;pointer-events:none;z-index:9999;border-radius:50%;mix-blend-mode:difference;opacity:0;transition:opacity .4s}
+.cur.on{opacity:1}
+.cur-dot{width:8px;height:8px;margin:-4px 0 0 -4px;background:var(--paper)}
+.cur-ring{width:40px;height:40px;margin:-20px 0 0 -20px;box-shadow:inset 0 0 0 1.5px var(--paper);transition:width .3s,height .3s,margin .3s}
+.cur-ring.big{width:76px;height:76px;margin:-38px 0 0 -38px}
+@media (pointer:coarse){.cur{display:none}}
+
+/* ── nav + rail ───────────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;justify-content:space-between;align-items:center;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) clamp(16px,3.5vw,48px) 0;pointer-events:none}
+.nav>*{pointer-events:auto}
+.logo{display:flex;align-items:center;gap:.7rem;background:var(--ink);color:var(--paper);padding:.4rem 1.1rem .4rem .4rem;border-radius:999px;text-decoration:none}
+.logo .seal{--s:34px}
+.logo b{font-family:var(--disp);font-weight:600;font-size:1.25rem;letter-spacing:.35em;line-height:1}
+.rail{position:fixed;right:clamp(10px,1.6vw,22px);top:50%;transform:translateY(-50%);z-index:60;display:flex;flex-direction:column;gap:2px;
+  background:var(--ink);border-radius:999px;padding:8px 5px}
+.rail button{width:30px;height:30px;border:0;border-radius:50%;background:transparent;font-family:var(--zh);font-size:15px;color:var(--paper);opacity:.45;cursor:pointer;transition:background .3s,color .3s,opacity .3s}
+.rail button.on{background:var(--gold);color:var(--ink);opacity:1}
+@media (max-width:760px){.rail{display:none}}
+
+/* ── intro doors ──────────────────────────────── */
+#doors{position:fixed;inset:0;z-index:9000;perspective:1800px;pointer-events:auto}
+.doors-in{position:absolute;inset:0;display:flex}
+.door{position:relative;flex:1;height:100%;background:var(--red);overflow:hidden;
+  box-shadow:inset 0 0 0 1.4vmin var(--red-d),inset 0 0 0 2.2vmin var(--gold)}
+.door-l{transform-origin:0 50%}
+.door-r{transform-origin:100% 50%}
+.studs{position:absolute;inset:9vmin 7vmin;display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(7,1fr);place-items:center}
+.studs i{width:3.4vmin;height:3.4vmin;border-radius:50%;background:var(--gold);box-shadow:inset 0 -.5vmin 0 var(--gold-d)}
+.knocker{position:absolute;top:50%;width:12vmin;height:12vmin;margin-top:-4vmin;transform-origin:50% 0}
+.door-l .knocker{right:7vmin}.door-r .knocker{left:7vmin}
+.knocker::before{content:'';position:absolute;left:50%;top:-4vmin;width:6vmin;height:6vmin;margin-left:-3vmin;border-radius:50%;background:var(--ink)}
+.knocker::after{content:'';position:absolute;inset:0;border-radius:50%;box-shadow:inset 0 0 0 1.3vmin var(--gold)}
+.door-seal{position:absolute;top:50%;width:22vmin;height:22vmin;margin-top:-11vmin;--s:22vmin;--sbg:var(--gold);--sfg:var(--red-d)}
+.door-l .door-seal{right:-11vmin}.door-r .door-seal{left:-11vmin}
+.door-fx{position:absolute;left:50%;top:50%;width:22vmin;height:22vmin;margin:-11vmin 0 0 -11vmin;border-radius:8%;box-shadow:0 0 0 4px var(--gold);opacity:0;pointer-events:none}
+.door-skip{position:absolute;bottom:calc(env(safe-area-inset-bottom,0px) + 24px);left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);border:0;border-radius:999px;padding:.6rem 1.2rem;font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;z-index:2}
+
+/* ── 一 HERO ──────────────────────────────────── */
+#hero{position:relative;height:100vh;height:100svh;overflow:hidden;background:var(--red);
+  --sx:61%;--sy:48%;--sd:min(76vmin,700px)}
+.par{position:absolute;inset:0;pointer-events:none}
+.disc-s{position:absolute;left:var(--sx);top:var(--sy);width:var(--sd);height:var(--sd);margin:calc(var(--sd)/-2) 0 0 calc(var(--sd)/-2)}
+.sun,.moon{width:100%;height:100%;border-radius:50%}
+.sun{background:var(--gold)}
+.moon{background:var(--cobalt)}
+.dragon-s{transform-origin:50% 50%}
+.hero-dragon{width:100%;height:100%;object-fit:contain}
+#petals{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.blossom-s{position:absolute;top:-6vh;left:-4vw;width:clamp(170px,23vw,400px);transform-origin:15% 0}
+.hero-blossom{width:100%;height:auto;transform-origin:15% 0}
+.hero-copy{position:absolute;left:clamp(16px,6vw,96px);bottom:clamp(28px,7vh,80px);z-index:5;max-width:min(64rem,calc(100vw - 32px))}
+.hero-eyebrow{display:inline-block;background:var(--ink);color:var(--gold);padding:.55em 1.1em;border-radius:999px}
+.hero-koi{font-family:var(--disp);font-weight:600;font-size:clamp(7rem,22vw,23rem);line-height:.78;letter-spacing:-.02em;color:var(--paper);display:flex;margin:.12em 0 .14em -.05em}
+.lt,.ch{display:inline-block;will-change:transform}
+.hero-tag{font-family:var(--disp);font-style:italic;font-weight:500;font-size:clamp(1.2rem,2.1vw,1.75rem);line-height:1.25;max-width:30ch}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:1.5rem}
+.hero-side{position:absolute;right:clamp(64px,8.5vw,140px);top:15vh;z-index:5;display:flex;flex-direction:column;align-items:center;gap:1.4rem}
+.vtext{writing-mode:vertical-rl;font-family:var(--zh);font-size:clamp(1.8rem,2.8vw,2.9rem);line-height:1.1;letter-spacing:.25em;color:var(--paper)}
+.vtext span{display:inline-block}
+.hero-side .seal{--s:52px}
+@media (max-width:760px){
+  #hero{--sx:50%;--sy:33%;--sd:min(92vw,52vh)}
+  .hero-side{right:16px;top:86px;gap:.8rem}.hero-side .seal{--s:40px}.vtext{font-size:1.5rem}
+  .hero-koi{font-size:34vw}
+  .hero-eyebrow{font-size:.56rem;letter-spacing:.14em}
+}
+
+/* ── 二 TIDE ──────────────────────────────────── */
+#tide{position:relative;height:100vh;height:100svh;overflow:hidden;background:var(--cobalt)}
+.water{position:absolute;inset:0;width:100%;height:100%;display:block}
+.center{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+.tide-glyph{font-family:var(--zh);font-size:min(96vh,96vw);line-height:1;color:var(--cobalt-l);transform:translateY(-6vh)}
+.tide-koi{width:min(48vmin,440px);height:auto}
+.koi-s{transform:translateY(-4vh)}
+.tide-line{position:absolute;top:calc(env(safe-area-inset-top,0px) + 13vh);left:0;right:0;padding:0 clamp(16px,8vw,120px);text-align:center;
+  font-family:var(--disp);font-style:italic;font-weight:500;font-size:clamp(2rem,5.4vw,5rem);line-height:1.02;z-index:4}
+.tide-line .w{display:inline-block;opacity:.16}
+.tide-stamps{position:absolute;left:clamp(16px,6vw,96px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:14px;z-index:4}
+.tide-stamps .seal{--s:clamp(52px,8vmin,84px)}
+.tide-note{position:absolute;right:clamp(16px,6vw,96px);top:50%;transform:translateY(-50%);max-width:17rem;text-align:right;z-index:4}
+.tide-note p{font-family:var(--disp);font-style:italic;font-size:1.25rem;line-height:1.3;margin-top:.6rem}
+.wave-layer{position:absolute;left:0;right:0;bottom:-1px;overflow:hidden;pointer-events:none}
+.wl-back{height:60vh}.wl-mid{height:74vh}.wl-front{height:90vh}
+.wave-strip{display:flex;height:100%;width:max-content;animation:drift var(--dur,40s) linear infinite}
+.wave-strip img{height:100%;width:auto;flex:none}
+.wave-strip img.f{transform:scaleX(-1)}
+@keyframes drift{to{transform:translateX(calc(var(--period,1200px) * -1))}}
+.ripples{position:absolute;inset:0;z-index:6;pointer-events:none}
+.ripple{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--paper)}
+.curtain{position:absolute;inset:0;z-index:8;background:var(--jade)}
+.scal{position:absolute;left:-6vw;right:-6vw;bottom:calc(100% - 1px);display:flex;transform:translateY(50%)}
+.scal i{flex:1;aspect-ratio:1;border-radius:50%;background:var(--jade);position:relative}
+.scal i::after{content:'';position:absolute;inset:20%;border-radius:50%;box-shadow:inset 0 0 0 .45vw var(--jade-d)}
+.scal.b{left:-10vw;right:-2vw;transform:translateY(15%)}
+.scal.b i{background:var(--jade-d)}
+.scal.b i::after{box-shadow:inset 0 0 0 .45vw var(--jade)}
+@media (max-width:760px){.tide-stamps{top:auto;bottom:4vh;transform:none;flex-direction:row}.tide-note{display:none}.scal i::after{box-shadow:inset 0 0 0 1.2vw var(--jade-d)}}
+
+/* ── 三 UPSTREAM ──────────────────────────────── */
+#upstream{position:relative;height:100vh;height:100svh;overflow:hidden;background:var(--jade)}
+.up-track{display:flex;height:100%;width:max-content;will-change:transform}
+.up-panel{flex:none;width:100vw;height:100%;position:relative;overflow:hidden;background:var(--bg);color:var(--fg)}
+.up-art{position:absolute;right:2vw;top:0;bottom:0;width:58vw;display:grid;place-items:center}
+.up-art>*{grid-area:1/1}
+.up-disc{width:64vmin;height:64vmin;border-radius:50%;background:var(--disc)}
+.up-glyph{font-family:var(--zh);font-size:min(78vh,58vw);line-height:1;color:var(--ac)}
+.up-copy{position:absolute;left:clamp(16px,8vw,130px);top:50%;transform:translateY(-50%);width:min(36rem,40vw);z-index:2}
+.up-copy .label{opacity:.8}
+.up-num{font-family:var(--zh);font-size:clamp(3rem,7vw,6rem);line-height:1;color:var(--ac);margin-bottom:.4rem}
+.up-copy h3{font-family:var(--disp);font-weight:600;font-size:clamp(2.2rem,4.4vw,4.3rem);line-height:1.02;margin-top:.7rem}
+.up-copy p{font-size:1.1rem;line-height:1.65;max-width:42ch;margin-top:1.3rem}
+.up-copy .cue{font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;margin-top:1.6rem;display:inline-flex;gap:.6rem;align-items:center}
+.up-river{position:absolute;left:clamp(16px,8vw,130px);right:clamp(16px,8vw,130px);bottom:8vh;height:4px;background:rgba(16,11,18,.28);z-index:5;border-radius:4px}
+.up-fill{position:absolute;inset:0;background:var(--paper);transform-origin:0 50%;transform:scaleX(0);border-radius:4px}
+.up-stops{position:absolute;inset:0}
+.up-stops span{position:absolute;top:14px;transform:translateX(-50%);font-family:var(--zh);font-size:1.1rem;color:var(--paper)}
+.up-koi-s{position:absolute;left:0;top:50%;width:clamp(64px,11vmin,110px);aspect-ratio:1;margin:calc(clamp(64px,11vmin,110px)/-2) 0 0 calc(clamp(64px,11vmin,110px)/-2)}
+.up-koi{width:100%;height:100%}
+@media (max-width:760px){
+  .up-art{left:0;right:0;width:auto;top:9vh;bottom:auto;height:46vh}
+  .up-glyph{font-size:44vh}.up-disc{width:40vh;height:40vh}
+  .up-copy{left:20px;right:20px;width:auto;top:auto;bottom:15vh;transform:none}
+  .up-copy p{font-size:1rem}.up-num{display:none}
+}
+
+/* ── 四 DRAGON GATE ───────────────────────────── */
+#gate{position:relative;height:100vh;height:100svh;overflow:hidden;background:var(--navy)}
+.stars{position:absolute;inset:0}
+.stars i{position:absolute;border-radius:50%;background:var(--paper);animation:tw 3s ease-in-out infinite alternate}
+@keyframes tw{from{opacity:.15}to{opacity:.9}}
+.crescent{position:absolute;right:13vw;top:13vh;width:16vmin;height:16vmin;border-radius:50%;background:var(--paper);overflow:hidden}
+.crescent::after{content:'';position:absolute;inset:0;border-radius:50%;background:var(--navy);transform:translate(28%,-14%)}
+.pf{position:absolute;bottom:0;left:50%;width:min(82vw,1000px);height:82vh;margin-left:calc(min(82vw,1000px)/-2)}
+.pf>div{position:absolute}
+.pf-falls{left:20%;right:20%;top:44%;bottom:0;background:var(--cobalt);overflow:hidden}
+.pf-falls i{position:absolute;top:-60%;width:3px;height:60%;background:var(--paper);opacity:.75;animation:fall var(--d,1.2s) linear infinite;animation-delay:var(--dl,0s)}
+@keyframes fall{to{transform:translateY(270%)}}
+.pf-pillar{bottom:0;width:7.5%;height:66%;background:var(--red)}
+.pf-pillar.l{left:13%}.pf-pillar.r{right:13%}
+.pf-pillar::after{content:'';position:absolute;left:-22%;right:-22%;bottom:0;height:9%;background:var(--ink)}
+.pf-pillar::before{content:'';position:absolute;left:0;right:0;top:6%;height:2.2%;background:var(--gold)}
+.pf-beam2{left:13%;right:13%;top:38%;height:4.2%;background:var(--red)}
+.pf-beam{left:3%;right:3%;top:21%;height:8%;background:var(--red);box-shadow:inset 0 .9vh 0 var(--gold),inset 0 -.9vh 0 var(--gold)}
+.pf-roof{left:-2%;right:-2%;top:3%;height:19%;background:var(--jade);clip-path:polygon(0 0,13% 36%,87% 36%,100% 0,94% 100%,6% 100%)}
+.pf-ridge{left:12%;right:12%;top:8.2%;height:2%;background:var(--gold)}
+.pf-eave{left:5%;right:5%;top:19.5%;height:2.2%;background:var(--jade-d)}
+.pf-plaque{left:50%;top:24%;width:26%;height:15%;margin-left:-13%;background:var(--gold);color:var(--ink);display:grid;place-items:center;
+  font-family:var(--sealf);font-weight:900;font-size:min(5vh,6.4vw,3.4rem);letter-spacing:.2em;padding-left:.2em;white-space:nowrap;
+  box-shadow:inset 0 0 0 .7vh var(--red-d),inset 0 0 0 1.3vh var(--gold);z-index:3}
+.gate-flood{position:absolute;left:50%;top:31.5%;width:12vmin;height:12vmin;margin:-6vmin 0 0 -6vmin;border-radius:50%;background:var(--gold);z-index:9;transform:scale(0)}
+.gate-water{z-index:4}
+.gate-water .wl-front{height:34vh}
+.gate-koi-s{position:absolute;left:50%;top:50%;width:clamp(110px,22vmin,220px);aspect-ratio:1;margin:calc(clamp(110px,22vmin,220px)/-2) 0 0 calc(clamp(110px,22vmin,220px)/-2);z-index:7}
+.gate-koi{width:100%;height:100%}
+.gate-reveal{position:absolute;inset:0;z-index:10;pointer-events:none}
+.gate-dragon{position:absolute;left:50%;top:50%;width:min(86vmin,800px);aspect-ratio:1;margin:calc(min(86vmin,800px)/-2) 0 0 calc(min(86vmin,800px)/-2)}
+.gate-dragon img{width:100%;height:100%}
+.gate-zh{position:absolute;left:clamp(16px,6vw,96px);top:50%;transform:translateY(-50%);writing-mode:vertical-rl;font-family:var(--zh);font-size:clamp(2.6rem,7.5vh,5.6rem);line-height:1;color:var(--red);letter-spacing:.06em}
+.gate-zh span{display:inline-block}
+.gate-en{position:absolute;right:clamp(16px,6vw,96px);bottom:clamp(28px,9vh,96px);max-width:min(26rem,80vw);color:var(--ink);text-align:right}
+.gate-en h2{font-family:var(--disp);font-style:italic;font-weight:600;font-size:clamp(1.9rem,3.6vw,3.3rem);line-height:1.02}
+.gate-en p{font-size:1.05rem;margin-top:.8rem}
+@media (max-width:760px){.gate-zh{top:16vh;transform:none;font-size:2.6rem}.gate-en{left:20px;right:20px;text-align:left}.pf{height:66vh;width:96vw;margin-left:-48vw}.pf-plaque{width:34%;margin-left:-17%}}
+
+/* ── 五 MENU ──────────────────────────────────── */
+#menu{position:relative;background:var(--gold);color:var(--ink)}
+.menu-head{position:relative;height:100vh;height:100svh;overflow:hidden;display:grid;place-items:center;text-align:center;padding:0 16px}
+.menu-big{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--zh);font-size:min(92vh,92vw);line-height:1;color:var(--red);pointer-events:none}
+.menu-title{position:relative;z-index:2}
+.menu-title h2{font-family:var(--disp);font-style:italic;font-weight:600;font-size:clamp(4rem,13vw,12rem);line-height:.85;color:var(--ink)}
+.menu-title p{font-family:var(--mono);font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;margin-top:1.4rem}
+.cards{position:relative}
+.card{position:sticky;top:0;height:100vh;height:100svh}
+.card-in{position:absolute;inset:0;overflow:hidden;background:var(--bg);color:var(--fg);transform-origin:50% 0;display:grid;grid-template-columns:1.1fr 1fr;align-items:center}
+.card-shade{position:absolute;inset:0;background:var(--ink);opacity:0;pointer-events:none;z-index:5}
+.card-art{position:relative;height:100%;display:grid;place-items:center}
+.card-art>*{grid-area:1/1}
+.card-disc{width:min(72vmin,46vw);aspect-ratio:1;border-radius:50%;background:var(--disc)}
+.card-glyph{font-family:var(--zh);font-size:min(70vh,42vw);line-height:1;color:var(--ac)}
+.card-body{padding:0 clamp(20px,7vw,120px) 0 clamp(16px,2vw,32px);position:relative;z-index:2}
+.card-n{font-family:var(--mono);font-size:.75rem;letter-spacing:.22em}
+.card-body h3{font-family:var(--disp);font-weight:600;font-size:clamp(2.6rem,5.6vw,5.6rem);line-height:.95;margin:.6rem 0 1rem}
+.card-body p{font-family:var(--disp);font-style:italic;font-size:clamp(1.15rem,1.7vw,1.5rem);line-height:1.35;max-width:30ch}
+.card-meta{display:flex;align-items:center;gap:1.4rem;margin-top:2rem}
+.card-meta .seal{--s:86px;--sbg:var(--ac);--sfg:var(--bg);font-family:var(--disp);font-weight:700;font-size:1.6rem}
+.card-meta span{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;opacity:.85;max-width:16ch}
+@media (max-width:760px){
+  .card-in{grid-template-columns:1fr;grid-template-rows:46% 54%;align-items:start}
+  .card-disc{width:min(70vw,38vh)}.card-glyph{font-size:min(36vh,72vw)}
+  .card-body{padding:0 20px}.card-meta .seal{--s:68px;font-size:1.25rem}
+}
+
+/* ── tapes ────────────────────────────────────── */
+.tapes{position:relative;height:clamp(200px,38vh,380px);background:var(--ink);overflow:hidden}
+.tape{position:absolute;left:-10vw;right:-10vw;top:50%;overflow:hidden;padding:.7rem 0}
+.tape.t1{background:var(--gold);color:var(--ink);transform:translateY(-70%) rotate(-4deg)}
+.tape.t2{background:var(--red);color:var(--paper);transform:translateY(-20%) rotate(3deg)}
+.tape-row{display:flex;width:max-content;white-space:nowrap}
+.tape-row span{font-family:var(--disp);font-weight:600;font-size:clamp(1.6rem,3.4vw,3rem);line-height:1.1;padding:0 1.2rem}
+.tape-row span.zh{font-family:var(--zh);font-weight:400}
+
+/* ── 六 EVENING ───────────────────────────────── */
+#evening{position:relative;height:100vh;height:100svh;overflow:hidden;background:var(--ink)}
+.eve-title{position:absolute;left:clamp(16px,6vw,96px);top:calc(env(safe-area-inset-top,0px) + 14vh);z-index:3}
+.eve-title h2{font-family:var(--disp);font-style:italic;font-weight:600;font-size:clamp(2.8rem,6vw,5.6rem);line-height:.95}
+.eve-title h2 em{font-style:normal;font-family:var(--zh);color:var(--red)}
+.eve-title .label{color:var(--gold)}
+.lanterns{position:absolute;left:0;right:0;top:0;display:flex;justify-content:flex-end;gap:clamp(20px,6vw,110px);padding-right:clamp(40px,9vw,170px)}
+.lw{display:flex;flex-direction:column;align-items:center;transform-origin:50% 0;animation:sway var(--sw,5s) ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-2.4deg)}to{transform:rotate(2.4deg)}}
+.lw .str{width:2px;height:var(--len,20vh);background:var(--gold)}
+.lantern{--lan:var(--unlit);--lc:var(--unlit-ch);position:relative;display:flex;flex-direction:column;align-items:center;transform-origin:50% 0}
+.halo{position:absolute;left:50%;top:52%;width:175%;aspect-ratio:1;margin-left:-87.5%;transform:translateY(-50%) scale(0);border-radius:50%;background:var(--red-d);pointer-events:none}
+.halo.h2{width:250%;margin-left:-125%;background:none;box-shadow:inset 0 0 0 2px var(--gold)}
+.cap{width:56%;height:clamp(10px,1.7vmin,18px);background:var(--gold);position:relative;z-index:1}
+.lbody{position:relative;z-index:1;width:clamp(96px,15vmin,180px);aspect-ratio:1/1.12;border-radius:50%/47%;background:var(--lan);display:grid;place-items:center;overflow:hidden}
+.lbody::before,.lbody::after{content:'';position:absolute;top:0;bottom:0;border-radius:50%;box-shadow:inset 2px 0 0 rgba(16,11,18,.22),inset -2px 0 0 rgba(16,11,18,.22)}
+.lbody::before{left:22%;right:22%}.lbody::after{left:40%;right:40%}
+.lbody span{position:relative;font-family:var(--zh);font-size:clamp(2.2rem,6vmin,4.4rem);line-height:1;color:var(--lc)}
+.tassel{width:6px;height:clamp(40px,7vh,70px);background:var(--gold);position:relative;z-index:1}
+.tassel::after{content:'';position:absolute;left:50%;bottom:-8px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--red)}
+.eve-copy{position:absolute;left:clamp(16px,6vw,96px);right:clamp(16px,6vw,96px);bottom:clamp(28px,9vh,96px);height:11rem;z-index:3}
+.ec{position:absolute;left:0;bottom:0;max-width:34rem}
+.ec .label{color:var(--gold)}
+.ec h3{font-family:var(--disp);font-weight:600;font-size:clamp(2rem,3.6vw,3.2rem);line-height:1;margin:.5rem 0 .7rem}
+.ec p{font-size:1.05rem;line-height:1.6;max-width:44ch}
+@media (max-width:760px){.lanterns{justify-content:center;padding-right:0;gap:18px}.eve-title{top:auto;bottom:calc(11rem + 13vh)}.eve-copy{height:12rem}}
+
+/* ── 七 RESERVE ───────────────────────────────── */
+#reserve{position:relative;background:var(--ink);padding:14vh clamp(16px,4vw,64px) 16vh}
+.scroll-wrap{position:relative;max-width:1240px;margin:0 auto}
+.rod{position:absolute;left:-2.4%;right:-2.4%;height:22px;background:var(--red-d);border-radius:11px;z-index:3}
+.rod::before,.rod::after{content:'';position:absolute;top:50%;width:34px;height:34px;margin-top:-17px;border-radius:50%;background:var(--gold)}
+.rod::before{left:-14px}.rod::after{right:-14px}
+.rod.top{top:-11px}
+.rod.mv{top:-11px}
+.paper{position:relative;background:var(--paper);color:var(--ink);overflow:hidden;padding:clamp(56px,11vh,120px) clamp(20px,6vw,96px) clamp(56px,10vh,110px);clip-path:inset(0 0 100% 0)}
+.paper-koi{position:absolute;right:-5%;top:-14%;width:min(44vw,520px);opacity:1;animation:spin 80s linear infinite;pointer-events:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.rsv-grid{position:relative;z-index:2;display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,4vw,60px);align-items:start}
+.rsv-seal{--s:clamp(70px,10vw,120px)}
+.rsv-grid h2{font-family:var(--disp);font-weight:600;font-size:clamp(3rem,7.4vw,7rem);line-height:.88}
+.rsv-grid h2 em{color:var(--red)}
+.rsv-sub{font-family:var(--disp);font-style:italic;font-size:clamp(1.15rem,1.8vw,1.5rem);line-height:1.35;max-width:36ch;margin-top:1.2rem}
+form.rsv{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) auto;gap:clamp(12px,2vw,24px);align-items:end;margin-top:clamp(40px,7vh,72px);max-width:min(100%,60rem)}
+.fld{display:flex;flex-direction:column;gap:.4rem;min-width:0}
+.fld label{font-family:var(--mono);font-size:.66rem;letter-spacing:.2em;text-transform:uppercase}
+.fld input{background:transparent;border:0;border-bottom:2px solid var(--ink);padding:.55rem 0;font-family:var(--disp);font-size:1.35rem;font-style:italic;color:var(--ink);border-radius:0;min-width:0;width:100%}
+.fld input::placeholder{color:var(--ink);opacity:.4}
+.rsv .btn{background:var(--red);color:var(--paper)}
+.rsv-foot{position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:.5rem 2rem;margin-top:clamp(36px,6vh,60px);font-family:var(--mono);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase}
+.rsv-msg{position:relative;z-index:2;margin-top:1.2rem;font-family:var(--disp);font-style:italic;font-size:1.2rem;min-height:1.6em}
+.stamp-zone{position:absolute;left:0;top:0;width:0;height:0;z-index:4;pointer-events:none}
+.stamp{position:absolute;--s:clamp(110px,16vw,180px);margin:calc(var(--s)/-2) 0 0 calc(var(--s)/-2)}
+.stamp.ghost{opacity:.22}
+@media (max-width:860px){form.rsv{grid-template-columns:1fr 1fr}.rsv .btn{grid-column:1/-1;justify-content:center}.rsv-grid{grid-template-columns:1fr}}
+
+/* ── footer ───────────────────────────────────── */
+footer{position:relative;background:var(--ink);overflow:hidden;padding:4vh 0 calc(env(safe-area-inset-bottom,0px) + 4vh)}
+.foot-koi{font-family:var(--disp);font-weight:700;font-size:38vw;line-height:.8;text-align:center;color:transparent;-webkit-text-stroke:2px var(--gold);letter-spacing:-.02em;margin:2vh 0 4vh}
+.foot-koi span{display:inline-block}
+.foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;padding:0 clamp(16px,4vw,64px);font-family:var(--mono);font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;opacity:.7}
+
+@media (prefers-reduced-motion:reduce){
+  .wave-strip,.lw,.paper-koi,.stars i,.pf-falls i{animation:none}
+}
+</style>
+</head>
+<body>
+
+<div class="cur cur-ring" aria-hidden="true"></div>
+<div class="cur cur-dot" aria-hidden="true"></div>
+
+<!-- intro: temple doors -->
+<div id="doors" aria-hidden="true">
+  <div class="doors-in">
+    <div class="door door-l"><div class="studs"></div><div class="knocker"></div><div class="seal door-seal">鲤</div></div>
+    <div class="door door-r"><div class="studs"></div><div class="knocker"></div><div class="seal door-seal">鲤</div></div>
+  </div>
+  <div class="door-fx"></div>
+  <button class="door-skip" type="button">Enter · 入</button>
+</div>
+
+<header class="nav">
+  <a class="logo" href="#hero" data-go="#hero"><span class="seal">鲤</span><b>KOI</b></a>
+  <a class="btn btn-gold mag" href="#reserve" data-go="#reserve"><span class="zh">订</span>Reserve</a>
+</header>
+<nav class="rail" aria-label="Sections"></nav>
+
+<main>
+<!-- 一 HERO -->
+<section id="hero" data-rail="一" data-name="Hero">
+  <div class="par" data-d="14"><div class="disc-s sun-s"><div class="sun"></div></div></div>
+  <div class="par"><div class="disc-s moon-s"><div class="moon"></div></div></div>
+  <div class="par" data-d="26"><div class="disc-s dragon-s"><img class="hero-dragon" src="assets/dragon-ink.webp" alt=""></div></div>
+  <canvas id="petals" aria-hidden="true"></canvas>
+  <div class="par" data-d="40"><div class="blossom-s"><img class="hero-blossom" src="assets/blossom.webp" alt=""></div></div>
+
+  <div class="hero-side">
+    <div class="vtext" aria-label="Jin li — the koi leaps the dragon gate"><span>锦</span><span>鲤</span><span>·</span><span>跃</span><span>龙</span><span>门</span></div>
+    <span class="seal hs">福</span>
+  </div>
+
+  <div class="hero-copy">
+    <div class="hf"><p class="label hero-eyebrow">Shanghai fire · London table · Est. 2025</p></div>
+    <h1 class="hero-koi" aria-label="KOI"><span class="lt"><span class="ch">K</span></span><span class="lt"><span class="ch">O</span></span><span class="lt"><span class="ch">I</span></span></h1>
+    <div class="hf"><p class="hero-tag">Eight hundred years of ceremony, plated in one room on Silk Lane.</p></div>
+    <div class="hf"><div class="hero-cta">
+      <a class="btn btn-gold mag" href="#reserve" data-go="#reserve"><span class="zh">来</span>Reserve a table</a>
+      <a class="btn btn-line mag" href="#menu" data-go="#menu"><span class="zh">菜</span>See the menu</a>
+    </div></div>
+  </div>
+</section>
+
+<!-- 二 TIDE -->
+<section id="tide" data-rail="二" data-name="Tide">
+  <canvas class="water" aria-hidden="true"></canvas>
+  <div class="center"><div class="tide-glyph">潮</div></div>
+  <h2 class="tide-line" aria-label="The tide does not ask permission.">
+    <span class="w">The</span> <span class="w">tide</span> <span class="w">does</span> <span class="w">not</span> <span class="w">ask</span> <span class="w">permission.</span>
+  </h2>
+  <div class="tide-stamps"><span class="seal">水</span><span class="seal" style="--sbg:var(--gold);--sfg:var(--ink)">墨</span><span class="seal" style="--sbg:var(--paper);--sfg:var(--cobalt)">境</span></div>
+  <div class="tide-note"><span class="label" style="color:var(--gold)">鲤鱼 · The koi</span><p>Every koi is born in moving water. The good ones learn to swim against it.</p></div>
+  <div class="wave-layer wl-back" data-src="assets/wave-back.webp" data-dur="70"><div class="wave-strip"></div></div>
+  <div class="wave-layer wl-mid" data-src="assets/wave-mid.webp" data-dur="46"><div class="wave-strip"></div></div>
+  <div class="center"><div class="koi-s"><img class="tide-koi" src="assets/koi-tide.webp" alt=""></div></div>
+  <div class="wave-layer wl-front" data-src="assets/wave-front.webp" data-dur="28"><div class="wave-strip"></div></div>
+  <div class="ripples"></div>
+  <div class="curtain"><div class="scal b"></div><div class="scal f"></div></div>
+</section>
+
+<!-- 三 UPSTREAM -->
+<section id="upstream" data-rail="三" data-name="Story">
+  <div class="up-track">
+    <article class="up-panel" style="--bg:var(--jade);--fg:var(--paper);--ac:var(--gold);--disc:var(--jade-d)">
+      <div class="up-art"><div class="up-disc"></div><div class="up-glyph">逆</div></div>
+      <div class="up-copy">
+        <div class="up-num">一</div>
+        <p class="label">01 — Downstream</p>
+        <h3>Every koi is born downstream.</h3>
+        <p>KOI began in a Shanghai alley kitchen: one wok, one stool, and a grandmother who measured nothing and missed nothing. We still cook to her tolerances.</p>
+        <span class="cue">Keep scrolling <span class="zh" style="font-size:1.2rem">→</span></span>
+      </div>
+    </article>
+    <article class="up-panel" style="--bg:var(--gold);--fg:var(--ink);--ac:var(--red);--disc:var(--paper)">
+      <div class="up-art"><div class="up-disc"></div><div class="up-glyph">力</div></div>
+      <div class="up-copy">
+        <div class="up-num">二</div>
+        <p class="label">02 — Against the current</p>
+        <h3>The current is convenience. We swim the other way.</h3>
+        <p>Stocks simmered for nineteen hours. Noodles pulled to order. Nothing arrives in a bag that we could make by hand.</p>
+      </div>
+    </article>
+    <article class="up-panel" style="--bg:var(--peony);--fg:var(--ink);--ac:var(--paper);--disc:var(--red)">
+      <div class="up-art"><div class="up-disc"></div><div class="up-glyph">忍</div></div>
+      <div class="up-copy">
+        <div class="up-num">三</div>
+        <p class="label">03 — Patience</p>
+        <h3>Seventy-two hours for a short rib. Eight seconds in the wok.</h3>
+        <p>Some dishes are about time, others about timing. The kitchen is built for both, and it has no wall, so you can watch.</p>
+      </div>
+    </article>
+    <article class="up-panel" style="--bg:var(--navy);--fg:var(--paper);--ac:var(--gold);--disc:var(--cobalt)">
+      <div class="up-art"><div class="up-disc"></div><div class="up-glyph">门</div></div>
+      <div class="up-copy">
+        <div class="up-num">四</div>
+        <p class="label">04 — The falls</p>
+        <h3>At the top of the falls stands the Dragon Gate.</h3>
+        <p>The legend says a koi that leaps it becomes a dragon. Dinner here is our attempt at the jump.</p>
+      </div>
+    </article>
+  </div>
+  <div class="up-river" aria-hidden="true">
+    <div class="up-fill"></div>
+    <div class="up-stops"><span style="left:0">一</span><span style="left:33.33%">二</span><span style="left:66.66%">三</span><span style="left:100%">四</span></div>
+    <div class="up-koi-s"><img class="up-koi" src="assets/koi-gate.webp" alt=""></div>
+  </div>
+</section>
+
+<!-- 四 DRAGON GATE -->
+<section id="gate" data-rail="四" data-name="Dragon Gate">
+  <div class="stars"></div>
+  <div class="crescent"></div>
+  <div class="pf" aria-hidden="true">
+    <div class="pf-falls"></div>
+    <div class="pf-pillar l"></div><div class="pf-pillar r"></div>
+    <div class="pf-beam2"></div>
+    <div class="pf-beam"></div>
+    <div class="pf-roof"></div>
+    <div class="pf-eave"></div>
+    <div class="pf-ridge"></div>
+    <div class="pf-plaque">龍門</div>
+    <div class="gate-flood"></div>
+  </div>
+  <div class="gate-water"><div class="wave-layer wl-front" data-src="assets/wave-front.webp" data-dur="24"><div class="wave-strip"></div></div></div>
+  <div class="gate-koi-s"><img class="gate-koi" src="assets/koi-gate.webp" alt=""></div>
+  <div class="gate-reveal">
+    <div class="gate-dragon"><img src="assets/dragon-ink.webp" alt=""></div>
+    <div class="gate-zh" aria-label="Li yu yue long men"><span>鲤</span><span>鱼</span><span>跃</span><span>龙</span><span>门</span></div>
+    <div class="gate-en"><h2>The koi that leaps the gate becomes the dragon.</h2><p>Six courses, one ascent. This is the menu.</p></div>
+  </div>
+</section>
+
+<!-- 五 MENU -->
+<section id="menu" data-rail="五" data-name="Menu">
+  <div class="menu-head">
+    <div class="menu-big">菜</div>
+    <div class="menu-title"><h2>The Menu</h2><p>Six dishes · one kitchen · no shortcuts</p></div>
+  </div>
+  <div class="cards">
+    <article class="card"><div class="card-in" style="--bg:var(--red);--fg:var(--paper);--ac:var(--gold);--disc:var(--red-d)">
+      <div class="card-art"><div class="card-disc"></div><div class="card-glyph">鸭</div></div>
+      <div class="card-body"><span class="card-n">01 / 06 · From the fire</span><h3>Sichuan Pepper Duck</h3><p>Mandarin reduction, fermented black bean, lotus root fried until it shatters.</p><div class="card-meta"><span class="seal price">£42</span><span>Serves two · numbing heat</span></div></div>
+      <div class="card-shade"></div></div></article>
+    <article class="card"><div class="card-in" style="--bg:var(--jade);--fg:var(--paper);--ac:var(--gold);--disc:var(--jade-d)">
+      <div class="card-art"><div class="card-disc"></div><div class="card-glyph">茶</div></div>
+      <div class="card-body"><span class="card-n">02 / 06 · From the smoke</span><h3>Dragon Well Salmon</h3><p>Cold-smoked over Longjing tea leaves, pickled cucumber, cold-pressed sesame.</p><div class="card-meta"><span class="seal price">£36</span><span>Served cold · tea smoke</span></div></div>
+      <div class="card-shade"></div></div></article>
+    <article class="card"><div class="card-in" style="--bg:var(--cobalt);--fg:var(--paper);--ac:var(--peony);--disc:var(--navy)">
+      <div class="card-art"><div class="card-disc"></div><div class="card-glyph">鱼</div></div>
+      <div class="card-body"><span class="card-n">03 / 06 · From the water</span><h3>Jasmine Sea Bass</h3><p>Steamed whole, lotus blossom broth, chrysanthemum oil poured at the table.</p><div class="card-meta"><span class="seal price">£48</span><span>Whole fish · for the table</span></div></div>
+      <div class="card-shade"></div></div></article>
+    <article class="card"><div class="card-in" style="--bg:var(--peony);--fg:var(--ink);--ac:var(--ink);--disc:var(--paper)">
+      <div class="card-art"><div class="card-disc"></div><div class="card-glyph">面</div></div>
+      <div class="card-body"><span class="card-n">04 / 06 · From the hands</span><h3>Black Sesame Dan Dan</h3><p>Slow-braised pork, Sichuan numbing oil, noodles pulled the moment you order.</p><div class="card-meta"><span class="seal price">£28</span><span>Hand-pulled · to order</span></div></div>
+      <div class="card-shade"></div></div></article>
+    <article class="card"><div class="card-in" style="--bg:var(--ink);--fg:var(--paper);--ac:var(--red);--disc:var(--navy)">
+      <div class="card-art"><div class="card-disc"></div><div class="card-glyph">骨</div></div>
+      <div class="card-body"><span class="card-n">05 / 06 · From the clock</span><h3>Five Spice Short Rib</h3><p>A seventy-two-hour braise, osmanthus glaze, compressed daikon, shiso.</p><div class="card-meta"><span class="seal price">£54</span><span>72 hours · worth it</span></div></div>
+      <div class="card-shade"></div></div></article>
+    <article class="card"><div class="card-in" style="--bg:var(--paper);--fg:var(--ink);--ac:var(--red);--disc:var(--gold)">
+      <div class="card-art"><div class="card-disc"></div><div class="card-glyph">豆</div></div>
+      <div class="card-body"><span class="card-n">06 / 06 · From the stillness</span><h3>Osmanthus Tofu</h3><p>Silken tofu made each morning, honeyed osmanthus, winter melon consommé.</p><div class="card-meta"><span class="seal price">£22</span><span>Made daily · plant-based</span></div></div>
+      </div></article>
+  </div>
+</section>
+
+<div class="tapes" aria-hidden="true">
+  <div class="tape t1"><div class="tape-row" data-dir="1"></div></div>
+  <div class="tape t2"><div class="tape-row" data-dir="-1"></div></div>
+</div>
+
+<!-- 六 EVENING -->
+<section id="evening" data-rail="六" data-name="Evening">
+  <div class="lanterns">
+    <div class="lw" style="--len:14vh;--sw:4.6s"><div class="str"></div><div class="lantern"><div class="halo"></div><div class="halo h2"></div><div class="cap"></div><div class="lbody"><span>空</span></div><div class="cap"></div><div class="tassel"></div></div></div>
+    <div class="lw" style="--len:24vh;--sw:5.4s;animation-delay:-1.4s"><div class="str"></div><div class="lantern"><div class="halo"></div><div class="halo h2"></div><div class="cap"></div><div class="lbody"><span>礼</span></div><div class="cap"></div><div class="tassel"></div></div></div>
+    <div class="lw" style="--len:9vh;--sw:5s;animation-delay:-3s"><div class="str"></div><div class="lantern"><div class="halo"></div><div class="halo h2"></div><div class="cap"></div><div class="lbody"><span>艺</span></div><div class="cap"></div><div class="tassel"></div></div></div>
+  </div>
+  <div class="eve-title"><p class="label">06 — The evening</p><h2>Dinner begins <br>before you sit <em>夜</em></h2></div>
+  <div class="eve-copy">
+    <div class="ec"><p class="label">一 · 空 · The space</p><h3>Nowhere you look is an accident.</h3><p>Ivory silk canopies, ink-washed stone, paper lanterns hung low enough to touch.</p></div>
+    <div class="ec"><p class="label">二 · 礼 · The ritual</p><h3>Aged pu-erh first. Your fortune last.</h3><p>Dinner opens with a ceremonial pour and closes with a character the chef draws at your table.</p></div>
+    <div class="ec"><p class="label">三 · 艺 · The craft</p><h3>The kitchen has no wall.</h3><p>Watch the wok smoke, the ladle arc, the knife go still. It isn't a show. It's the work, made visible.</p></div>
+  </div>
+</section>
+
+<!-- 七 RESERVE -->
+<section id="reserve" data-rail="七" data-name="Reserve">
+  <div class="scroll-wrap">
+    <div class="rod top" aria-hidden="true"></div>
+    <div class="paper">
+      <img class="paper-koi" src="assets/koi-red.webp" alt="">
+      <div class="rsv-grid">
+        <span class="seal rsv-seal">来</span>
+        <div><h2>Secure<br><em>your table.</em></h2><p class="rsv-sub">Dinner service Thursday to Sunday. Tasting menus for four or more, with a day's notice.</p></div>
+      </div>
+      <form class="rsv" novalidate>
+        <div class="fld"><label for="rName">Name</label><input id="rName" autocomplete="name" placeholder="Your name"></div>
+        <div class="fld"><label for="rDate">Date</label><input id="rDate" placeholder="Fri 14 Nov"></div>
+        <div class="fld"><label for="rGuests">Guests</label><input id="rGuests" inputmode="numeric" placeholder="4"></div>
+        <button class="btn mag" type="submit"><span class="zh">订</span>Stamp it</button>
+      </form>
+      <p class="rsv-msg" role="status" aria-live="polite"></p>
+      <div class="rsv-foot"><span>Thu – Sun · 18:00 – 23:00</span><span>44 Silk Lane, London</span><span>Groups of 8+ by phone</span></div>
+      <div class="stamp-zone"></div>
+    </div>
+    <div class="rod mv" aria-hidden="true"></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="tapes" style="height:auto;background:none;overflow:visible"><div class="tape t2" style="position:relative;left:auto;right:auto;transform:none;margin:0 -2vw"><div class="tape-row" data-dir="1"></div></div></div>
+  <div class="foot-koi" aria-hidden="true"><span>K</span><span>O</span><span>I</span></div>
+  <div class="foot-row"><span>KOI 锦鲤 · 44 Silk Lane, London</span><span>Thu – Sun · 18:00 – 23:00</span><span>© 2026 KOI Restaurant</span></div>
+</footer>
+
+<script>
+(()=>{
+const PAL=/*PAL_JSON*/{};
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const FINE=matchMedia('(pointer:fine)').matches;
+const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
+const rand=(a,b)=>a+Math.random()*(b-a);
+const cover=d=>2*Math.hypot(innerWidth,innerHeight)/d*1.04;
+gsap.registerPlugin(ScrollTrigger);
+
+// ── smooth scroll ───────────────────────────────
+let lenis=null;
+if(!RM&&window.Lenis){
+  lenis=new Lenis({duration:1.15,easing:t=>1-Math.pow(1-t,4)});
+  lenis.on('scroll',ScrollTrigger.update);
+  gsap.ticker.add(t=>lenis.raf(t*1000));
+  gsap.ticker.lagSmoothing(0);
+  window.lenis=lenis;
+}
+const goTo=t=>lenis?lenis.scrollTo(t,{duration:1.6}):$(t).scrollIntoView({behavior:RM?'auto':'smooth'});
+$$('[data-go]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();goTo(a.dataset.go)}));
+
+let vel=0;
+ScrollTrigger.create({onUpdate:s=>{vel=s.getVelocity()}});
+
+// ── seal slam ───────────────────────────────────
+function slam(el,{from=3.2,rot=-20,to=-5,shake=null,ring=true}={}){
+  const tl=gsap.timeline();
+  tl.fromTo(el,{scale:from,autoAlpha:0,rotation:rot},{scale:1,autoAlpha:1,rotation:to,duration:.36,ease:'power4.in'});
+  if(ring){
+    const r=document.createElement('i');r.className='slam-ring';el.appendChild(r);
+    tl.fromTo(r,{scale:.85,opacity:1},{scale:1.9,opacity:0,duration:.6,ease:'power2.out',onComplete:()=>r.remove()},'>-.02');
+  }
+  if(shake)tl.fromTo(shake,{x:-10,y:4},{x:0,y:0,duration:.7,ease:'elastic.out(1,.28)'},ring?'<':'>');
+  return tl;
+}
+
+// ── cursor + magnetic ───────────────────────────
+if(FINE&&!RM){
+  const d=$('.cur-dot'),r=$('.cur-ring');
+  const dx=gsap.quickTo(d,'x',{duration:.1}),dy=gsap.quickTo(d,'y',{duration:.1});
+  const rx=gsap.quickTo(r,'x',{duration:.45,ease:'power3'}),ry=gsap.quickTo(r,'y',{duration:.45,ease:'power3'});
+  addEventListener('pointermove',e=>{dx(e.clientX);dy(e.clientY);rx(e.clientX);ry(e.clientY);d.classList.add('on');r.classList.add('on')});
+  document.addEventListener('pointerover',e=>r.classList.toggle('big',!!e.target.closest('a,button,input')));
+  $$('.mag').forEach(b=>{
+    const qx=gsap.quickTo(b,'x',{duration:.5,ease:'power3'}),qy=gsap.quickTo(b,'y',{duration:.5,ease:'power3'});
+    b.addEventListener('pointermove',e=>{const k=b.getBoundingClientRect();qx((e.clientX-k.left-k.width/2)*.3);qy((e.clientY-k.top-k.height/2)*.4)});
+    b.addEventListener('pointerleave',()=>{qx(0);qy(0)});
+  });
+}else{$$('.cur').forEach(c=>c.remove())}
+
+// ── waves: mirrored tiles so the seam never shows ─
+function buildWaves(){
+  $$('.wave-layer').forEach(L=>{
+    const h=L.offsetHeight, tw=h*1200/637, n=2*Math.ceil((innerWidth/tw+2)/2)+2, strip=$('.wave-strip',L);
+    strip.innerHTML='';
+    for(let i=0;i<n;i++){const im=new Image();im.src=L.dataset.src;im.alt='';im.style.width=tw+'px';if(i%2)im.className='f';strip.appendChild(im)}
+    strip.style.setProperty('--period',(2*tw)+'px');strip.style.setProperty('--dur',(L.dataset.dur||40)+'s');
+  });
+}
+buildWaves();
+
+// ── petals ──────────────────────────────────────
+const PC=PAL.petals;
+function petals(cv,n){
+  const ctx=cv.getContext('2d'); let W,H,run=true;
+  const size=()=>{W=cv.width=cv.offsetWidth;H=cv.height=cv.offsetHeight};size();addEventListener('resize',size);
+  const P=Array.from({length:n},()=>mk(true));
+  function mk(any){return{x:Math.random()*W,y:any?Math.random()*H:-20,vx:rand(-.6,.6),vy:rand(.6,1.7),a:rand(0,6.3),va:rand(-.05,.05),r:rand(5,12),c:PC[Math.random()*PC.length|0],s:rand(0,6.3),ss:rand(.012,.03),f:Math.random()>.45}}
+  ScrollTrigger.create({trigger:cv.parentElement,start:'top bottom',end:'bottom top',onToggle:s=>run=s.isActive});
+  (function lp(){
+    if(run){ctx.clearRect(0,0,W,H);
+      for(const p of P){p.s+=p.ss;p.x+=p.vx+Math.sin(p.s)*.7;p.y+=p.vy+Math.abs(vel)/900;p.a+=p.va;
+        if(p.y>H+20)Object.assign(p,mk(false));
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);ctx.fillStyle=p.c;
+        if(p.f){for(let i=0;i<5;i++){ctx.rotate(1.2566);ctx.beginPath();ctx.ellipse(0,-p.r*.55,p.r*.33,p.r*.6,0,0,6.283);ctx.fill()}}
+        else{ctx.beginPath();ctx.ellipse(0,0,p.r*.45,p.r,0,0,6.283);ctx.fill()}
+        ctx.restore()}}
+    requestAnimationFrame(lp);
+  })();
+}
+if(!RM)petals($('#petals'),46);
+
+// ── stars + falls ───────────────────────────────
+const stars=$('.stars');
+for(let i=0;i<70;i++){const s=document.createElement('i'),z=rand(1.5,3.6);Object.assign(s.style,{left:rand(0,100)+'%',top:rand(0,62)+'%',width:z+'px',height:z+'px',animationDelay:rand(-3,0)+'s',animationDuration:rand(1.6,4)+'s'});stars.appendChild(s)}
+const falls=$('.pf-falls');
+for(let i=0;i<14;i++){const f=document.createElement('i');f.style.left=rand(2,97)+'%';f.style.setProperty('--d',rand(.7,1.5)+'s');f.style.setProperty('--dl',rand(-1.5,0)+'s');falls.appendChild(f)}
+$$('.scal').forEach(s=>{for(let i=0;i<14;i++)s.appendChild(document.createElement('i'))});
+$$('.studs').forEach(s=>{for(let i=0;i<35;i++)s.appendChild(document.createElement('i'))});
+
+// ── 一 HERO ─────────────────────────────────────
+function heroIn(){
+  const tl=gsap.timeline();
+  tl.from('.sun',{scale:0,duration:1.5,ease:'elastic.out(1,.6)'},0)
+    .fromTo('.hero-dragon',{clipPath:'polygon(0% 0%,0% 0%,-40% 100%,-40% 100%)',rotation:-12,scale:.9},
+      {clipPath:'polygon(0% 0%,140% 0%,100% 100%,-40% 100%)',rotation:0,scale:1,duration:1.6,ease:'power3.inOut'},.15)
+    .from('.ch',{x:()=>rand(-50,50)+'vw',y:()=>rand(40,90)+'vh',rotation:()=>rand(-140,140),scale:.3,autoAlpha:0,duration:1.6,stagger:.12,ease:'expo.out'},.25)
+    .from('.hero-blossom',{rotation:-38,y:-60,autoAlpha:0,duration:1.8,ease:'elastic.out(1,.45)'},.3)
+    .from('.hero-eyebrow,.hero-tag,.hero-cta',{y:40,autoAlpha:0,duration:.9,stagger:.1,ease:'power3.out'},.8)
+    .from('.vtext span',{y:-80,autoAlpha:0,duration:.7,stagger:.07,ease:'back.out(2.4)'},.7)
+    .add(slam($('.hs'),{rot:24,to:-8}),1.4);
+  return tl;
+}
+if(!RM&&FINE){
+  const pars=$$('#hero .par[data-d]').map(el=>({x:gsap.quickTo(el,'x',{duration:1.2,ease:'power3'}),y:gsap.quickTo(el,'y',{duration:1.2,ease:'power3'}),d:+el.dataset.d}));
+  $('#hero').addEventListener('pointermove',e=>{const nx=e.clientX/innerWidth-.5,ny=e.clientY/innerHeight-.5;pars.forEach(p=>{p.x(-nx*p.d*2.2);p.y(-ny*p.d*2.2)})});
+}
+gsap.set('.moon',{x:()=>innerWidth*.9});
+const heroTl=gsap.timeline({scrollTrigger:{trigger:'#hero',start:'top top',end:'+=170%',pin:true,scrub:1,invalidateOnRefresh:true}});
+heroTl
+  .to('.lt',{x:()=>rand(-45,45)+'vw',y:()=>rand(-170,-110)+'vh',rotation:()=>rand(-150,150),scale:()=>rand(.4,.9),duration:.42,ease:'power2.in',stagger:.03},0)
+  .to('.lt',{autoAlpha:0,duration:.1,stagger:.03},.34)
+  .to('.hf',{y:-70,autoAlpha:0,duration:.22,stagger:.04},0)
+  .to('.blossom-s',{x:'-30vw',y:'-50vh',rotation:-35,duration:.45,ease:'power2.in'},0)
+  .to('.hero-side',{x:'25vw',autoAlpha:0,duration:.3,ease:'power2.in'},0.04)
+  .to('#petals',{autoAlpha:0,duration:.3},.15)
+  .to('.dragon-s',{y:'-120vh',rotation:-38,scale:1.35,duration:.5,ease:'power2.in'},.1)
+  .to('.moon',{x:0,duration:.34,ease:'power2.out'},.2)
+  .to('.sun-s',{scale:1.09,duration:.12,ease:'back.out(3)'},.52)
+  .to('.moon-s',{scale:()=>cover($('.moon-s').offsetWidth),duration:.42,ease:'power3.in'},.62);
+
+// ── 二 TIDE ─────────────────────────────────────
+const tideTl=gsap.timeline({scrollTrigger:{trigger:'#tide',start:'top top',end:'+=260%',pin:true,scrub:1}});
+gsap.set('.curtain',{yPercent:112});
+tideTl
+  .from('.wl-back',{yPercent:70,duration:.24,ease:'power2.out'},0)
+  .from('.wl-mid',{yPercent:80,duration:.24,ease:'power2.out'},.04)
+  .from('#tide .wl-front',{yPercent:90,duration:.24,ease:'power2.out'},.08)
+  .fromTo('.tide-glyph',{scale:.35,rotation:-25,autoAlpha:0},{scale:1,rotation:0,autoAlpha:1,duration:.3,ease:'back.out(1.6)'},.02)
+  .fromTo('.koi-s',{y:'55vh',scale:.5},{y:'-4vh',scale:1,duration:.36,ease:'power2.out'},.16)
+  .fromTo('.tide-koi',{rotation:-60},{rotation:420,duration:1,ease:'none'},.16)
+  .to('.tide-line .w',{opacity:1,duration:.06,stagger:.035,ease:'none'},.28)
+  .from('.tide-note',{x:80,autoAlpha:0,duration:.14},.4)
+  .to('.curtain',{yPercent:0,duration:.3,ease:'power2.inOut'},.7)
+  .to('.koi-s',{y:'-70vh',scale:.6,duration:.3,ease:'power2.in'},.7)
+  .to('.scal',{autoAlpha:0,duration:.04},.97);
+ScrollTrigger.create({trigger:'#tide',start:'top 60%',once:true,onEnter:()=>{
+  const st=$$('.tide-stamps .seal');st.forEach((s,i)=>gsap.delayedCall(i*.22,()=>slam(s,{rot:rand(-30,30),to:rand(-8,8)})));
+}});
+gsap.set('.tide-stamps .seal',{autoAlpha:0});
+// ripples
+const water=initWater();
+const rip=$('.ripples');let lastR=0;
+function ripple(x,y,big){water&&water.drop(x,y,big);const r=document.createElement('i');r.className='ripple';r.style.left=x+'px';r.style.top=y+'px';rip.appendChild(r);
+  gsap.fromTo(r,{scale:.4,opacity:1},{scale:big?11:5.5,opacity:0,duration:big?1.6:1.2,ease:'power2.out',onComplete:()=>r.remove()})}
+$('#tide').addEventListener('pointermove',e=>{const t=performance.now();if(t-lastR<90)return;lastR=t;const k=$('#tide').getBoundingClientRect();ripple(e.clientX-k.left,e.clientY-k.top)});
+$('#tide').addEventListener('click',e=>{const k=$('#tide').getBoundingClientRect();[0,.15,.3].forEach(d=>gsap.delayedCall(d,()=>ripple(e.clientX-k.left,e.clientY-k.top,true)))});
+
+// ── WebGL water: posterised ripple field, hard flat bands ──
+function initWater(){
+  const cv=$('.water');
+  if(!window.THREE||!cv)return null;
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas:cv,antialias:false,alpha:false,powerPreference:'high-performance'})}catch(e){return null}
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+  const hex=h=>{const n=parseInt(h.slice(1),16);return `vec3(${((n>>16)&255)/255},${((n>>8)&255)/255},${(n&255)/255})`};
+  const N=10, rips=Array.from({length:N},()=>new THREE.Vector3(0,0,-999));
+  const uni={uTime:{value:0},uRes:{value:new THREE.Vector2(1,1)},uStorm:{value:0},uRip:{value:rips}};
+  const mat=new THREE.ShaderMaterial({
+    uniforms:uni,
+    extensions:{derivatives:true},
+    vertexShader:`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}`,
+    fragmentShader:`
+      precision highp float;
+      uniform float uTime,uStorm;uniform vec2 uRes;uniform vec3 uRip[${N}];
+      varying vec2 vUv;
+      const vec3 C0=${hex(PAL.w0)},C1=${hex(PAL.w1)},C2=${hex(PAL.w2)},C3=${hex(PAL.w3)},C4=${hex(PAL.w4)},CP=${hex(PAL.paper)};
+      float field(vec2 p){
+        float t=uTime,h=0.;
+        h+=sin(dot(p,vec2(.0042,.0019))+t*.62)*.5;
+        h+=sin(dot(p,vec2(-.0031,.0047))-t*.48)*.36;
+        h+=sin(dot(p,vec2(.0068,-.0016))+t*1.05)*.22;
+        h*=.5+uStorm*.75;
+        for(int i=0;i<${N};i++){
+          vec3 r=uRip[i];float age=t-r.z;float d=length(p-r.xy);
+          float env=exp(-abs(d-age*300.)/110.)*exp(-age*.7)*step(0.,age);
+          h+=sin(d*.042-age*8.)*env*1.9;
+        }
+        return h;
+      }
+      void main(){
+        float f=field(vUv*uRes)*1.55+1.5;
+        float lv=clamp(floor(f),0.,4.);
+        vec3 c=mix(C0,C1,step(1.,lv));c=mix(c,C2,step(2.,lv));c=mix(c,C3,step(3.,lv));c=mix(c,C4,step(4.,lv));
+        float w=fwidth(f);float dist=abs(fract(f+.5)-.5);
+        float line=(1.-smoothstep(w*.6,w*1.6,dist))*step(2.,f);
+        c=mix(c,mix(C3,CP,step(3.5,f)),line);
+        gl_FragColor=vec4(c,1.);
+      }`
+  });
+  const scene=new THREE.Scene(),cam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+  scene.add(new THREE.Mesh(new THREE.PlaneGeometry(2,2),mat));
+  const clock=new THREE.Clock();let idx=0,live=false,lastP=0;
+  const size=()=>{const w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);uni.uRes.value.set(w,h)};
+  size();addEventListener('resize',size);
+  const frame=()=>{if(!RM)uni.uTime.value=clock.getElapsedTime();
+    const p=tideTl.progress();uni.uStorm.value=p;
+    if(lastP<.42&&p>=.42)api.drop(cv.clientWidth/2,cv.clientHeight*.46,true);
+    lastP=p;renderer.render(scene,cam)};
+  // span the whole pin: 'bottom top' on a pinned element ends partway through its pin
+  ScrollTrigger.create({trigger:'#tide',start:'top bottom',end:()=>'+='+(tideTl.scrollTrigger.end-tideTl.scrollTrigger.start+2*innerHeight),invalidateOnRefresh:true,onToggle:s=>{live=s.isActive;if(live)frame()}});
+  gsap.ticker.add(()=>{if(live)frame()});
+  const api={drop(x,y,big){const r=rips[idx++%N];r.set(x,cv.clientHeight-y,uni.uTime.value-(big?0:.15));if(RM)frame()}};
+  return api;
+}
+
+// ── 三 UPSTREAM ─────────────────────────────────
+const track=$('.up-track');
+const dist=()=>track.scrollWidth-innerWidth;
+const upMove=gsap.to(track,{x:()=>-dist(),ease:'none',scrollTrigger:{trigger:'#upstream',start:'top top',end:()=>'+='+dist(),pin:true,scrub:1,invalidateOnRefresh:true}});
+const riverW=()=>$('.up-river').offsetWidth;
+gsap.timeline({scrollTrigger:{trigger:'#upstream',start:'top top',end:()=>'+='+dist(),scrub:1,invalidateOnRefresh:true}})
+  .fromTo('.up-fill',{scaleX:0},{scaleX:1,ease:'none'},0)
+  .fromTo('.up-koi-s',{x:0},{x:()=>riverW(),ease:'none'},0)
+  .fromTo('.up-koi',{rotation:0},{rotation:1080,ease:'none'},0);
+$$('.up-panel').forEach((p,i)=>{
+  const g=$('.up-glyph',p),d=$('.up-disc',p),c=$('.up-copy',p);
+  const sa={trigger:p,containerAnimation:upMove,start:'left right',end:'center center',scrub:true};
+  if(i===0){gsap.fromTo(g,{scale:.4,rotation:-30},{scale:1,rotation:0,ease:'power2.out',scrollTrigger:{trigger:'#upstream',start:'top bottom',end:'top top',scrub:true}});return}
+  gsap.fromTo(g,{scale:.3,rotation:-40,xPercent:40},{scale:1,rotation:0,xPercent:0,ease:'power2.out',scrollTrigger:sa});
+  gsap.fromTo(d,{scale:.2},{scale:1,ease:'back.out(1.4)',scrollTrigger:sa});
+  gsap.fromTo(c,{xPercent:60,autoAlpha:0},{xPercent:0,autoAlpha:1,ease:'power2.out',scrollTrigger:{...sa,end:'left 30%'}});
+});
+$$('.up-panel').forEach(p=>{
+  gsap.to($('.up-glyph',p),{rotation:18,yPercent:-8,ease:'none',scrollTrigger:{trigger:p,containerAnimation:upMove,start:'center center',end:'right left',scrub:true}});
+});
+
+// ── 四 DRAGON GATE ──────────────────────────────
+const gateTl=gsap.timeline({scrollTrigger:{trigger:'#gate',start:'top top',end:'+=300%',pin:true,scrub:1,invalidateOnRefresh:true}});
+gsap.set('.gate-reveal>*',{autoAlpha:0});
+gsap.set('.gate-koi-s',{x:()=>-innerWidth*.42,y:()=>innerHeight*.62,scale:.55});
+gateTl
+  .fromTo('.pf-pillar',{yPercent:100},{yPercent:0,duration:.12,stagger:.03,ease:'power3.out'},0)
+  .fromTo('.pf-beam2,.pf-beam',{y:()=>-innerHeight*.6},{y:0,duration:.12,stagger:.03,ease:'bounce.out'},.06)
+  .fromTo('.pf-roof,.pf-eave,.pf-ridge',{y:()=>-innerHeight*.7},{y:0,duration:.14,ease:'bounce.out'},.1)
+  .fromTo('.pf-plaque',{scale:3,autoAlpha:0,rotation:-14},{scale:1,autoAlpha:1,rotation:0,duration:.08,ease:'power4.in'},.2)
+  .fromTo('.pf-falls',{scaleY:0,transformOrigin:'50% 0'},{scaleY:1,duration:.1},.18)
+  .fromTo('.crescent',{y:()=>-innerHeight*.4},{y:0,duration:.2,ease:'power2.out'},0)
+  .to('.gate-koi-s',{x:0,duration:.3,ease:'power1.out'},.26)
+  .to('.gate-koi-s',{y:()=>-innerHeight*.06,duration:.3,ease:'power3.out'},.26)
+  .to('.gate-koi',{rotation:720,duration:.42,ease:'none'},.26)
+  .to('.gate-koi-s',{scale:1,duration:.3},.26)
+  .to('.gate-koi-s',{y:()=>-innerHeight*.75,scale:.4,duration:.16,ease:'power2.in'},.56)
+  .to('.pf-plaque',{scale:1.18,duration:.04,yoyo:true,repeat:1},.56)
+  .to('.gate-flood',{scale:()=>cover($('.gate-flood').offsetWidth),duration:.18,ease:'power3.in'},.6)
+  .to('.gate-dragon',{autoAlpha:1,duration:.01},.74)
+  .fromTo('.gate-dragon',{scale:.25,rotation:60},{scale:1,rotation:0,duration:.18,ease:'back.out(1.4)'},.74)
+  .to('.gate-zh',{autoAlpha:1,duration:.01},.8)
+  .fromTo('.gate-zh span',{y:-120,scale:2.4,autoAlpha:0},{y:0,scale:1,autoAlpha:1,duration:.1,stagger:.025,ease:'power4.in'},.8)
+  .to('.gate-en',{autoAlpha:1,duration:.01},.86)
+  .fromTo('.gate-en>*',{y:50,autoAlpha:0},{y:0,autoAlpha:1,duration:.08,stagger:.03},.86)
+  .to({},{duration:.06});
+
+// ── 五 MENU ─────────────────────────────────────
+gsap.timeline({scrollTrigger:{trigger:'.menu-head',start:'top bottom',end:'bottom top',scrub:true}})
+  .fromTo('.menu-big',{scale:.4,rotation:-35,autoAlpha:1},{scale:1,rotation:0,ease:'power2.out',duration:1})
+  .to('.menu-big',{scale:1.7,rotation:20,autoAlpha:0,ease:'power1.in',duration:1});
+gsap.from('.menu-title h2',{yPercent:60,rotationX:-80,transformPerspective:900,transformOrigin:'50% 100%',autoAlpha:0,duration:1.2,ease:'expo.out',scrollTrigger:{trigger:'.menu-head',start:'top 55%'}});
+const cards=$$('.card');
+cards.forEach((c,i)=>{
+  const ci=$('.card-in',c),g=$('.card-glyph',c),disc=$('.card-disc',c),seal=$('.price',c);
+  gsap.fromTo(ci,{rotation:i%2?3:-3,yPercent:6},{rotation:0,yPercent:0,ease:'none',scrollTrigger:{trigger:c,start:'top bottom',end:'top top',scrub:true}});
+  gsap.fromTo(g,{scale:.3,rotation:i%2?50:-50},{scale:1,rotation:0,ease:'power2.out',scrollTrigger:{trigger:c,start:'top 85%',end:'top 5%',scrub:true}});
+  gsap.fromTo(disc,{scale:0},{scale:1,ease:'back.out(1.5)',scrollTrigger:{trigger:c,start:'top 75%',end:'top 10%',scrub:true}});
+  gsap.set(seal,{autoAlpha:0});
+  ScrollTrigger.create({trigger:c,start:'top 30%',once:true,onEnter:()=>slam(seal,{rot:rand(-30,30),to:rand(-9,9),shake:$('.card-body',c)})});
+  const nx=cards[i+1];
+  if(nx){
+    gsap.to(ci,{scale:.86,rotation:i%2?-4:4,ease:'none',scrollTrigger:{trigger:nx,start:'top bottom',end:'top top',scrub:true}});
+    gsap.to($('.card-shade',c),{opacity:.55,ease:'none',scrollTrigger:{trigger:nx,start:'top bottom',end:'top top',scrub:true}});
+  }
+});
+
+// ── velocity marquees ───────────────────────────
+const TAPE=['锦鲤','KOI','龍門','Dim sum at dusk','火','Silk Lane','茶','Thu – Sun','福','Hand-pulled','鱼','London'];
+$$('.tape-row').forEach(row=>{
+  const make=()=>TAPE.map(t=>`<span class="${/[一-鿿]/.test(t)?'zh':''}">${t} ·</span>`).join('');
+  row.innerHTML=make()+make();
+  const dir=+row.dataset.dir;
+  const tw=dir>0?gsap.fromTo(row,{xPercent:0},{xPercent:-50,repeat:-1,duration:26,ease:'none'}):gsap.fromTo(row,{xPercent:-50},{xPercent:0,repeat:-1,duration:26,ease:'none'});
+  let cur=1;
+  gsap.ticker.add(()=>{const tgt=(1+Math.min(Math.abs(vel)/220,9))*(vel<0?-1:1);cur+=(tgt-cur)*.08;tw.timeScale(RM?0:cur)});
+});
+gsap.utils.toArray('.tapes:not(footer .tapes) .tape').forEach((t,i)=>{
+  gsap.fromTo(t,{xPercent:i?14:-14},{xPercent:i?-14:14,ease:'none',scrollTrigger:{trigger:t.parentElement,start:'top bottom',end:'bottom top',scrub:true}});
+});
+
+// ── 六 EVENING ──────────────────────────────────
+const lws=$$('.lw'),ecs=$$('.ec');
+gsap.set(ecs,{autoAlpha:0,yPercent:40});
+gsap.set('.eve-title',{autoAlpha:1});
+const eveTl=gsap.timeline({scrollTrigger:{trigger:'#evening',start:'top top',end:'+=220%',pin:true,scrub:1}});
+eveTl.from('.lw',{y:'-60vh',duration:.15,stagger:.04,ease:'back.out(1.2)'},0)
+     .from('.eve-title>*',{y:60,autoAlpha:0,duration:.1,stagger:.04},.05);
+lws.forEach((lw,i)=>{
+  const at=.22+i*.24, L=$('.lantern',lw);
+  eveTl.to(L,{'--lan':PAL.red,'--lc':PAL.gold,duration:.04},at)
+       .to($$('.halo',L),{scale:1,duration:.1,stagger:.02,ease:'back.out(2)'},at)
+       .to('.eve-title',{autoAlpha:i===0?0:0,y:-30,duration:.06},i===0?at:at)
+       .to(ecs[i],{autoAlpha:1,yPercent:0,duration:.07,ease:'power2.out'},at+.02);
+  if(ecs[i-1])eveTl.to(ecs[i-1],{autoAlpha:0,yPercent:-40,duration:.06,ease:'power2.in'},at-.02);
+});
+eveTl.to({},{duration:.08});
+const swing=$$('.lantern').map(l=>gsap.quickTo(l,'rotation',{duration:1.4,ease:'elastic.out(1,.3)'}));
+gsap.ticker.add(()=>{const r=gsap.utils.clamp(-16,16,vel/140);swing.forEach((q,i)=>q(r*(1+i*.15)))});
+
+// ── 七 RESERVE ──────────────────────────────────
+const paper=$('.paper');
+gsap.timeline({scrollTrigger:{trigger:'.scroll-wrap',start:'top 78%',end:'top 0%',scrub:.6,invalidateOnRefresh:true}})
+  .fromTo(paper,{clipPath:'inset(0% 0% 100% 0%)'},{clipPath:'inset(0% 0% 0% 0%)',ease:'none'},0)
+  .fromTo('.rod.mv',{y:0},{y:()=>paper.offsetHeight,ease:'none'},0);
+gsap.set('.rsv-seal',{autoAlpha:0});
+ScrollTrigger.create({trigger:'.paper',start:'top 30%',once:true,onEnter:()=>slam($('.rsv-seal'),{rot:-30,to:-6})});
+const form=$('form.rsv'),zone=$('.stamp-zone'),msg=$('.rsv-msg');let stamps=0;
+form.addEventListener('submit',e=>{
+  e.preventDefault();
+  const name=$('#rName').value.trim();
+  if(!name){msg.textContent='Add a name first, so the stamp knows whose table it is.';$('#rName').focus();return}
+  const k=paper.getBoundingClientRect(),b=form.querySelector('button').getBoundingClientRect();
+  $$('.stamp:not(.ghost)',zone).forEach(s=>s.classList.add('ghost'));
+  const s=document.createElement('span');s.className='seal stamp';s.textContent=['订','福','来','鲤'][stamps++%4];
+  s.style.left=(b.left-k.left+b.width/2+rand(-40,40))+'px';s.style.top=(b.top-k.top-90+rand(-20,20))+'px';
+  zone.appendChild(s);
+  slam(s,{from:4,rot:rand(-40,40),to:rand(-12,12),shake:paper});
+  msg.textContent=`Stamped for ${name}. This is a prototype, so nothing is sent yet.`;
+});
+
+// ── footer ──────────────────────────────────────
+gsap.from('.foot-koi span',{yPercent:100,rotation:()=>rand(-25,25),stagger:.08,ease:'power3.out',scrollTrigger:{trigger:'footer',start:'top 90%',end:'bottom bottom',scrub:1}});
+
+// ── rail (after all pins) ──
+const rail=$('.rail');
+$$('section[data-rail]').forEach(sec=>{
+  const b=document.createElement('button');b.type='button';b.textContent=sec.dataset.rail;b.setAttribute('aria-label',sec.dataset.name);
+  b.addEventListener('click',()=>goTo('#'+sec.id));rail.appendChild(b);
+  ScrollTrigger.create({trigger:sec,start:'top center',end:'bottom center',onToggle:s=>{if(s.isActive){$$('button',rail).forEach(x=>x.classList.toggle('on',x===b))}}});
+});
+
+// ── intro doors ─────────────────────────────────
+const doors=$('#doors');
+function openDoors(){
+  if(RM){doors.remove();return}
+  document.documentElement.classList.add('locked');lenis&&lenis.stop();
+  const done=()=>{doors.remove();document.documentElement.classList.remove('locked');lenis&&lenis.start();ScrollTrigger.refresh()};
+  const tl=gsap.timeline({onComplete:done});
+  gsap.set('.door-seal',{autoAlpha:0});
+  tl.add(slam($('.door-l .door-seal'),{from:3.4,rot:-16,to:0,ring:false}),.45)
+    .add(slam($('.door-r .door-seal'),{from:3.4,rot:-16,to:0,ring:false}),.45)
+    .fromTo('.door-fx',{scale:.9,opacity:1},{scale:2.3,opacity:0,duration:.7,ease:'power2.out'},.81)
+    .fromTo('.doors-in',{x:-12,y:5},{x:0,y:0,duration:.6,ease:'elastic.out(1,.25)'},.81)
+    .to('.knocker',{rotation:26,duration:.16,yoyo:true,repeat:3,ease:'sine.inOut'},1.3)
+    .to('.door-l',{rotationY:100,duration:1.6,ease:'power3.inOut'},1.75)
+    .to('.door-r',{rotationY:-100,duration:1.6,ease:'power3.inOut'},1.75)
+    .to('.door-skip',{autoAlpha:0,duration:.3},1.75)
+    .add(heroIn(),2.05)
+    .to(doors,{autoAlpha:0,duration:.35},2.9);
+  $('.door-skip').addEventListener('click',()=>tl.progress(1));
+}
+if(RM){doors.remove()}
+document.fonts.ready.then(()=>{ScrollTrigger.refresh();openDoors()});
+let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(()=>{buildWaves();ScrollTrigger.refresh()},250)});
+})();
+</script>
+</body>
+</html>

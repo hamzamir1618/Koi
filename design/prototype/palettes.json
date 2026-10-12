@@ -1,0 +1,86 @@
+{
+  "vibrant": {
+    "red": "#E0241B",
+    "red-d": "#A8130D",
+    "gold": "#FFC22E",
+    "gold-d": "#E09A00",
+    "jade": "#00A06A",
+    "jade-d": "#007A50",
+    "cobalt": "#1F3FD1",
+    "cobalt-l": "#2A4FE0",
+    "navy": "#0F1A5C",
+    "peony": "#FF4D7E",
+    "ink": "#100B12",
+    "paper": "#FFF3DC",
+    "unlit": "#4E1A1B",
+    "unlit-ch": "#8C3A2E",
+    "w0": "#1936C4",
+    "w1": "#1F3FD1",
+    "w2": "#2A4FE0",
+    "w3": "#4C79FF",
+    "w4": "#A9C4FF",
+    "petals": [
+      "#FF8FB1",
+      "#FFC2D4",
+      "#FFF3DC",
+      "#FFC22E",
+      "#FF5C8A"
+    ],
+    "wave": {
+      "back": [
+        "#2A4FE0",
+        "#3F66F0"
+      ],
+      "mid": [
+        "#4C79FF",
+        "#A9C4FF"
+      ],
+      "front": [
+        "#6E97FF",
+        "#FFF3DC"
+      ]
+    }
+  },
+  "muted": {
+    "red": "#C8352A",
+    "red-d": "#92241C",
+    "gold": "#EBB24A",
+    "gold-d": "#C28A28",
+    "jade": "#1F8A68",
+    "jade-d": "#166A50",
+    "cobalt": "#2E46AE",
+    "cobalt-l": "#3A53BC",
+    "navy": "#1A2352",
+    "peony": "#DD6886",
+    "ink": "#15101A",
+    "paper": "#F4EAD6",
+    "unlit": "#4C2422",
+    "unlit-ch": "#8A463A",
+    "w0": "#2A40A0",
+    "w1": "#2E46AE",
+    "w2": "#3A53BC",
+    "w3": "#5570D0",
+    "w4": "#9DAEE2",
+    "petals": [
+      "#E79DB2",
+      "#F1C9D4",
+      "#F4EAD6",
+      "#EBB24A",
+      "#DD6886"
+    ],
+    "wave": {
+      "back": [
+        "#3A53BC",
+        "#4862C8"
+      ],
+      "mid": [
+        "#5570D0",
+        "#A8B6E4"
+      ],
+      "front": [
+        "#728AD8",
+        "#F4EAD6"
+      ]
+    }
+  }
+}

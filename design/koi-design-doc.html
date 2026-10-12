@@ -1,0 +1,591 @@
+<title>KOI — Design Document</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root{
+  --ink:#09060C;--ink-m:#1A1224;--paper:#F0E8D8;--paper-w:#EBE0CC;--paper-m:#C8BAA0;
+  --petal:#D44F72;--petal-lt:#ECA8C0;--amber:#C46820;--seal:#C02218;--gold:#B88C28;
+  --navy:#0C1E3C;--navy-m:#163556;--navy-lt:#2A5698;--foam:#D4C4A0;
+  --f-zh:'Ma Shan Zheng',serif;
+  --f-d:'Cormorant Garamond',Georgia,serif;
+  --f-b:'EB Garamond',Georgia,serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--paper-w);font-family:var(--f-b);font-size:16px;line-height:1.7;overflow-x:hidden}
+
+/* ── COVER ── */
+.cover{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;padding:2rem}
+.cover-ghost{position:absolute;font-family:var(--f-zh);font-size:clamp(55vw,80vw,900px);color:var(--paper-w);opacity:.022;top:50%;left:50%;transform:translate(-50%,-50%);user-select:none;pointer-events:none;line-height:1}
+.cover-rule{width:1px;height:80px;background:rgba(240,232,216,.18);margin:0 auto 2rem}
+.cover-eyebrow{font-family:var(--f-b);font-size:.68rem;letter-spacing:.38em;text-transform:uppercase;color:var(--petal-lt);opacity:.7;margin-bottom:1.5rem}
+.cover-title{font-family:var(--f-d);font-size:clamp(5rem,18vw,14rem);font-weight:300;letter-spacing:.3em;color:var(--paper-w);line-height:.9;padding-right:.3em}
+.cover-sub{font-family:var(--f-d);font-style:italic;font-size:clamp(1rem,2.5vw,1.5rem);color:var(--paper-m);opacity:.55;margin-top:1.5rem}
+.cover-zh{font-family:var(--f-zh);font-size:clamp(1rem,3vw,2rem);color:var(--petal);opacity:.45;margin-top:.75rem;letter-spacing:.4em}
+.cover-meta{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--paper-m);opacity:.2;margin-top:3rem}
+/* Decorative seals on cover */
+.cover-seal{position:absolute;display:flex;align-items:center;justify-content:center;border:2px solid var(--seal);color:var(--seal);font-family:var(--f-zh);pointer-events:none}
+.cs1{width:52px;height:52px;font-size:22px;top:18%;right:12%;transform:rotate(-12deg);opacity:.7}
+.cs2{width:42px;height:42px;font-size:18px;bottom:22%;left:9%;transform:rotate(8deg);opacity:.6}
+/* Corner branch */
+.cover-branch{position:absolute;top:0;left:0;width:clamp(140px,20vw,260px);opacity:.7;pointer-events:none}
+
+/* ── NAVIGATION / TOC ── */
+.doc-nav{position:fixed;top:0;left:0;right:0;z-index:200;padding:.9rem clamp(1rem,4vw,3rem);display:flex;align-items:center;justify-content:space-between;background:rgba(9,6,12,.85);backdrop-filter:blur(16px);border-bottom:1px solid rgba(240,232,216,.05)}
+.doc-nav-logo{font-family:var(--f-d);font-size:1.15rem;font-weight:300;letter-spacing:.4em;color:var(--paper-w);opacity:.6;padding-right:.4em}
+.doc-nav-links{display:flex;gap:2rem;list-style:none}
+.doc-nav-links a{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;color:var(--paper-m);opacity:.45;text-decoration:none;transition:opacity .3s}
+.doc-nav-links a:hover{opacity:1}
+@media(max-width:600px){.doc-nav-links{display:none}}
+
+/* ── SECTIONS ── */
+.doc-section{padding:8rem clamp(1.5rem,6vw,5rem);position:relative;overflow:hidden}
+.ds-dark{background:var(--ink)}
+.ds-mid{background:var(--ink-m)}
+.ds-paper{background:var(--paper);color:var(--ink)}
+.ds-navy{background:var(--navy)}
+
+.sec-num{font-family:var(--f-zh);font-size:clamp(3rem,8vw,7rem);color:var(--paper-w);opacity:.06;user-select:none;line-height:1;position:absolute;top:4rem;right:4vw}
+.sec-label{font-size:.62rem;letter-spacing:.35em;text-transform:uppercase;margin-bottom:1rem;opacity:.35}
+.ds-paper .sec-label{color:var(--ink)}
+.sec-h{font-family:var(--f-d);font-size:clamp(2.2rem,6vw,4.5rem);font-weight:300;line-height:1.05;margin-bottom:2rem;text-wrap:balance}
+.ds-paper .sec-h{color:var(--ink)}
+.sec-h em{font-style:italic;color:var(--amber)}
+.ds-paper .sec-h em{color:#7A4010}
+.sec-body{font-family:var(--f-b);font-size:1rem;line-height:1.85;max-width:60ch;opacity:.65}
+.ds-paper .sec-body{color:#3A2810;opacity:.7}
+
+/* Divider rule */
+.sec-rule{border:none;border-top:1px solid rgba(240,232,216,.07);margin:3rem 0}
+.ds-paper .sec-rule{border-top-color:rgba(9,6,12,.1)}
+
+/* ── PALETTE ── */
+.palette-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:1px;margin-top:2.5rem;border:1px solid rgba(240,232,216,.06)}
+.swatch{padding:2.5rem 1.2rem 1.2rem;display:flex;flex-direction:column;justify-content:flex-end;gap:.3rem}
+.sw-name{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--paper-w);opacity:.5;font-family:var(--f-b)}
+.sw-hex{font-family:monospace;font-size:.72rem;color:var(--paper-w);opacity:.35}
+/* Swatch backgrounds */
+.sw-ink{background:var(--ink)}
+.sw-ink-m{background:var(--ink-m)}
+.sw-paper{background:var(--paper);--sw-c:var(--ink)}
+.sw-paper .sw-name,.sw-paper .sw-hex{color:var(--ink)}
+.sw-paper-m{background:var(--paper-m)}
+.sw-paper-m .sw-name,.sw-paper-m .sw-hex{color:var(--ink)}
+.sw-petal{background:var(--petal)}
+.sw-amber{background:var(--amber)}
+.sw-seal{background:var(--seal)}
+.sw-navy{background:var(--navy)}
+.sw-navy-lt{background:var(--navy-lt)}
+.sw-foam{background:var(--foam);color:var(--ink)}
+.sw-foam .sw-name,.sw-foam .sw-hex{color:var(--ink)}
+
+/* ── TYPOGRAPHY SPECIMENS ── */
+.type-block{margin:2.5rem 0;padding:2rem;border:1px solid rgba(240,232,216,.06);position:relative}
+.ds-paper .type-block{border-color:rgba(9,6,12,.08)}
+.type-label{position:absolute;top:-.55rem;left:1rem;background:var(--ink);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--paper-m);opacity:.4;padding:0 .4rem}
+.ds-paper .type-label{background:var(--paper);color:var(--ink)}
+.type-spec{font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--paper-m);opacity:.28;margin-bottom:.75rem;font-family:var(--f-b)}
+.ds-paper .type-spec{color:var(--ink)}
+.t-display{font-family:var(--f-d);font-size:clamp(3.5rem,9vw,7rem);font-weight:300;letter-spacing:.25em;color:var(--paper-w);line-height:.9;padding-right:.25em}
+.ds-paper .t-display{color:var(--ink)}
+.t-display-i{font-family:var(--f-d);font-style:italic;font-size:clamp(2rem,5vw,4rem);color:var(--paper-m);opacity:.7;line-height:1.1}
+.t-body{font-family:var(--f-b);font-size:1.05rem;line-height:1.85;color:var(--paper-m);opacity:.55;max-width:52ch}
+.ds-paper .t-body{color:var(--ink)}
+.t-label-eg{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--petal-lt);opacity:.6;font-family:var(--f-b)}
+.t-zh-lg{font-family:var(--f-zh);font-size:clamp(4rem,12vw,9rem);color:var(--paper-w);line-height:1}
+.ds-paper .t-zh-lg{color:var(--ink)}
+.t-zh-row{display:flex;gap:1.5rem;flex-wrap:wrap;align-items:baseline;margin-top:.5rem}
+.t-zh-row span{font-family:var(--f-zh)}
+
+/* ── LAYOUT OVERVIEW ── */
+.layout-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-top:2.5rem}
+.section-card{border:1px solid rgba(240,232,216,.07);padding:1.5rem;position:relative;overflow:hidden;transition:border-color .3s}
+.section-card:hover{border-color:rgba(212,79,114,.3)}
+.sc-num{font-family:var(--f-zh);font-size:2.5rem;color:var(--petal);opacity:.3;line-height:1;margin-bottom:.75rem}
+.sc-name{font-family:var(--f-d);font-size:1.05rem;color:var(--paper-w);margin-bottom:.4rem}
+.sc-desc{font-size:.78rem;color:var(--paper-m);opacity:.4;line-height:1.6}
+.sc-tag{display:inline-block;font-size:.55rem;letter-spacing:.2em;text-transform:uppercase;border:1px solid rgba(196,104,32,.35);color:var(--amber);padding:.15rem .45rem;margin-top:.6rem;opacity:.8}
+.sc-ghost{position:absolute;right:-10px;bottom:-15px;font-family:var(--f-zh);font-size:4rem;opacity:.04;line-height:1;user-select:none}
+
+/* ── ANIMATION NOTES ── */
+.anim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem;margin-top:2.5rem}
+.anim-card{padding:1.75rem;border-left:2px solid var(--amber)}
+.ds-paper .anim-card{border-left-color:var(--amber)}
+.ac-title{font-family:var(--f-d);font-size:1.1rem;color:var(--paper-w);margin-bottom:.5rem}
+.ds-paper .ac-title{color:var(--ink)}
+.ac-body{font-size:.85rem;color:var(--paper-m);opacity:.5;line-height:1.7}
+.ds-paper .ac-body{color:var(--ink);opacity:.55}
+.ac-tag{font-family:monospace;font-size:.7rem;color:var(--amber);opacity:.7;display:block;margin-top:.5rem}
+
+/* ── MOTION PRINCIPLE ── */
+.motion-row{display:flex;gap:2rem;flex-wrap:wrap;margin-top:2rem}
+.motion-pill{font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;border:1px solid rgba(240,232,216,.12);padding:.5rem 1.25rem;color:var(--paper-m);opacity:.6}
+.ds-paper .motion-pill{border-color:rgba(9,6,12,.12);color:var(--ink)}
+
+/* ── DECORATIVE REPEATING ELEMENTS ── */
+.hz-bg{position:absolute;font-family:var(--f-zh);pointer-events:none;user-select:none;opacity:.03;line-height:1}
+
+/* GSAP reveal targets */
+.reveal{opacity:0;transform:translateY(32px)}
+
+/* Seal in sections */
+.inline-seal{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border:2px solid var(--seal);color:var(--seal);font-family:var(--f-zh);font-size:18px;transform:rotate(-9deg);opacity:.75;vertical-align:middle;margin-right:.5rem}
+.ds-paper .inline-seal{border-color:var(--seal)}
+
+/* Scroll indicator */
+.scroll-prompt{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);font-size:.6rem;letter-spacing:.28em;text-transform:uppercase;color:var(--paper-m);opacity:.22;animation:nudge 2.5s ease-in-out infinite}
+@keyframes nudge{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}}
+
+/* Horizontal rule lines across cover */
+.h-rule-abs{position:absolute;left:0;right:0;height:1px;background:rgba(240,232,216,.05);pointer-events:none}
+
+/* Canvas for petals on cover */
+#coverCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.cover-content{position:relative;z-index:2}
+</style>
+
+<!-- NAV -->
+<nav class="doc-nav" id="docNav">
+  <span class="doc-nav-logo">KOI</span>
+  <ul class="doc-nav-links">
+    <li><a href="#vision">Vision</a></li>
+    <li><a href="#palette">Colour</a></li>
+    <li><a href="#typography">Type</a></li>
+    <li><a href="#layout">Layout</a></li>
+    <li><a href="#motion">Motion</a></li>
+  </ul>
+</nav>
+
+<!-- ── COVER ── -->
+<section class="cover" id="top">
+  <canvas id="coverCanvas"></canvas>
+  <div class="cover-ghost">境</div>
+  <div class="h-rule-abs" style="top:28%"></div>
+  <div class="h-rule-abs" style="bottom:24%"></div>
+
+  <!-- Cherry blossom branch upper-left -->
+  <svg class="cover-branch" viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path stroke="#09060C" stroke-width="4.5" fill="none" stroke-linecap="round" d="M8,255 C25,215 50,175 88,140 C115,114 148,98 172,70"/>
+    <path stroke="#09060C" stroke-width="3" fill="none" stroke-linecap="round" d="M88,140 C110,122 135,110 158,100"/>
+    <path stroke="#09060C" stroke-width="2" fill="none" stroke-linecap="round" d="M140,112 C145,92 143,72 138,54"/>
+    <path stroke="#09060C" stroke-width="2" fill="none" stroke-linecap="round" d="M172,70 C182,52 182,35 174,20"/>
+    <g fill="#D44F72">
+      <ellipse cx="172" cy="70" rx="8" ry="12" transform="rotate(0,172,70)"/>
+      <ellipse cx="172" cy="70" rx="8" ry="12" transform="rotate(72,172,70)"/>
+      <ellipse cx="172" cy="70" rx="8" ry="12" transform="rotate(144,172,70)"/>
+      <ellipse cx="172" cy="70" rx="8" ry="12" transform="rotate(216,172,70)"/>
+      <ellipse cx="172" cy="70" rx="8" ry="12" transform="rotate(288,172,70)"/>
+      <ellipse cx="138" cy="54" rx="6" ry="9" transform="rotate(15,138,54)"/>
+      <ellipse cx="138" cy="54" rx="6" ry="9" transform="rotate(87,138,54)"/>
+      <ellipse cx="138" cy="54" rx="6" ry="9" transform="rotate(159,138,54)"/>
+      <ellipse cx="138" cy="54" rx="6" ry="9" transform="rotate(231,138,54)"/>
+      <ellipse cx="138" cy="54" rx="6" ry="9" transform="rotate(303,138,54)"/>
+      <ellipse cx="174" cy="20" rx="7" ry="10" transform="rotate(-10,174,20)"/>
+      <ellipse cx="174" cy="20" rx="7" ry="10" transform="rotate(62,174,20)"/>
+      <ellipse cx="174" cy="20" rx="7" ry="10" transform="rotate(134,174,20)"/>
+      <ellipse cx="174" cy="20" rx="7" ry="10" transform="rotate(206,174,20)"/>
+      <ellipse cx="174" cy="20" rx="7" ry="10" transform="rotate(278,174,20)"/>
+    </g>
+    <g fill="#C46820">
+      <circle cx="172" cy="70" r="4"/>
+      <circle cx="138" cy="54" r="3"/>
+      <circle cx="174" cy="20" r="3.5"/>
+    </g>
+    <g fill="#B83B5E">
+      <ellipse cx="88" cy="140" rx="4" ry="6" transform="rotate(20,88,140)"/>
+      <ellipse cx="158" cy="100" rx="4" ry="5.5" transform="rotate(-15,158,100)"/>
+    </g>
+  </svg>
+
+  <div class="cover-seal cs1">鲤</div>
+  <div class="cover-seal cs2">道</div>
+
+  <div class="cover-content">
+    <div class="cover-rule"></div>
+    <div class="cover-eyebrow" id="cvEye">Design Document · KOI Restaurant · 2025</div>
+    <h1 class="cover-title" id="cvTitle">KOI</h1>
+    <p class="cover-sub" id="cvSub">A Visual Identity for the Meeting of Ink &amp; Flame</p>
+    <div class="cover-zh" id="cvZh">锦 鲤 · 水 墨 之 境</div>
+    <div class="cover-meta" id="cvMeta">Confidential · WeZero Franchise OS · October 2025</div>
+  </div>
+  <div class="scroll-prompt">↓ &nbsp; Scroll to Read</div>
+</section>
+
+<!-- ── 01 VISION ── -->
+<section class="doc-section ds-mid" id="vision">
+  <div class="hz-bg" style="font-size:clamp(30vw,50vw,600px);top:50%;right:-5vw;transform:translateY(-50%)">龍</div>
+  <div class="sec-num">一</div>
+  <div class="sec-label reveal">01 — Creative Vision</div>
+  <h2 class="sec-h reveal">The world <em>KOI</em> inhabits</h2>
+  <p class="sec-body reveal">KOI is not a restaurant that evokes East Asia — it <em>inhabits</em> it. Every visual decision draws from a specific visual vocabulary: the charged emptiness of sumi-e ink painting, the flat graphic power of Chinese woodblock prints, the ceremonial weight of imperial seal stamps. The aesthetic is not decorative. It is structural.</p>
+  <hr class="sec-rule">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2rem;margin-top:2rem">
+    <div class="reveal">
+      <div style="font-family:var(--f-d);font-size:1.1rem;color:var(--amber);margin-bottom:.5rem">Ink &amp; Restraint</div>
+      <div class="sec-body">Negative space is active. The ink on the page matters less than the white it surrounds. KOI's visual language breathes — it never fills every surface, and when it does, the density is intentional, not decorative noise.</div>
+    </div>
+    <div class="reveal">
+      <div style="font-family:var(--f-d);font-size:1.1rem;color:var(--petal);margin-bottom:.5rem">The Dragon &amp; the Koi</div>
+      <div class="sec-body">Chinese mythology holds that koi who swim upstream and leap the Dragon Gate become dragons. KOI's identity lives in that transformation — the aspiration, the movement against current, the moment of becoming.</div>
+    </div>
+    <div class="reveal">
+      <div style="font-family:var(--f-d);font-size:1.1rem;color:var(--petal-lt);margin-bottom:.5rem">Stage, Not Scene</div>
+      <div class="sec-body">The wave is a stage backdrop. The sakura falls like a theatre effect. KOI presents food as performance — a living composition with deliberate pacing, lighting, and a beginning, middle, and end.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 02 COLOUR ── -->
+<section class="doc-section ds-dark" id="palette">
+  <div class="hz-bg" style="font-size:clamp(25vw,40vw,500px);bottom:-3rem;left:-2vw">色</div>
+  <div class="sec-num">二</div>
+  <div class="sec-label reveal">02 — Colour Palette</div>
+  <h2 class="sec-h reveal">Flat colour. <em>No gradients.</em></h2>
+  <p class="sec-body reveal">Every color is a flat hex. No CSS gradients, no canvas gradient objects, no SVG gradient fills — anywhere. Depth is achieved through opacity layers, scale, and the spatial arrangement of flat shapes. This mirrors the flat-field aesthetic of Chinese woodblock printing and traditional porcelain painting.</p>
+
+  <div class="palette-grid reveal" style="margin-top:3rem">
+    <div class="swatch sw-ink"><div class="sw-name">Ink</div><div class="sw-hex">#09060C</div></div>
+    <div class="swatch sw-ink-m"><div class="sw-name">Ink Mid</div><div class="sw-hex">#1A1224</div></div>
+    <div class="swatch sw-paper"><div class="sw-name">Paper</div><div class="sw-hex">#F0E8D8</div></div>
+    <div class="swatch sw-paper-m"><div class="sw-name">Paper Mid</div><div class="sw-hex">#C8BAA0</div></div>
+    <div class="swatch sw-petal"><div class="sw-name">Petal</div><div class="sw-hex">#D44F72</div></div>
+    <div class="swatch sw-amber"><div class="sw-name">Amber</div><div class="sw-hex">#C46820</div></div>
+    <div class="swatch sw-seal"><div class="sw-name">Seal Red</div><div class="sw-hex">#C02218</div></div>
+    <div class="swatch sw-navy"><div class="sw-name">Wave Navy</div><div class="sw-hex">#0C1E3C</div></div>
+    <div class="swatch sw-navy-lt"><div class="sw-name">Wave Light</div><div class="sw-hex">#2A5698</div></div>
+    <div class="swatch sw-foam"><div class="sw-name">Wave Foam</div><div class="sw-hex">#D4C4A0</div></div>
+  </div>
+
+  <hr class="sec-rule">
+  <p class="sec-body reveal" style="opacity:.38;font-style:italic">The primary world is dark: ink ground, paper light. Colour appears as accent — the petal pink of sakura, amber of firelight, and the vermilion of imperial seals. The wave section inverts to deep navy, with the same flat-colour discipline applied to the ocean.</p>
+</section>
+
+<!-- ── 03 TYPOGRAPHY ── -->
+<section class="doc-section ds-paper" id="typography">
+  <div class="hz-bg" style="font-size:clamp(22vw,38vw,480px);top:50%;right:-1vw;transform:translateY(-50%);color:var(--ink)">文</div>
+  <div class="sec-num" style="color:var(--ink);opacity:.05">三</div>
+  <div class="sec-label reveal">03 — Typography</div>
+  <h2 class="sec-h reveal">The written <em>stroke</em></h2>
+  <p class="sec-body reveal">Two type systems coexist. Western type carries warmth and editorial precision; Chinese calligraphy carries mythic weight. Neither translates the other — they speak at different registers simultaneously, like an orchestra where strings and percussion share the stage without competition.</p>
+
+  <div class="type-block reveal" style="margin-top:2.5rem">
+    <span class="type-label">Display — Cormorant Garamond 300</span>
+    <div class="type-spec">Used for: headings, KOI logotype, section titles, menu item names</div>
+    <div class="t-display">KOI</div>
+    <div class="t-display-i">Where Ink Meets Water</div>
+  </div>
+
+  <div class="type-block reveal">
+    <span class="type-label">Body — EB Garamond 400</span>
+    <div class="type-spec">Used for: body copy, labels, navigation, button text, captions</div>
+    <div class="t-label-eg">Fine Dining · Ink &amp; Flame · Shanghai Inspired</div>
+    <div class="t-body" style="margin-top:.6rem">Every dish is composed the way a master calligrapher approaches blank paper — with patience, intention, and the understanding that restraint is the most powerful stroke of all.</div>
+  </div>
+
+  <div class="type-block reveal">
+    <span class="type-label">Chinese — Ma Shan Zheng (Google Fonts)</span>
+    <div class="type-spec">Used for: graphic elements, seals, background glyphs, marquee, section numbers</div>
+    <div class="t-zh-lg">龍 鲤 水</div>
+    <div class="t-zh-row" style="margin-top:1rem">
+      <span style="font-size:2.5rem;opacity:.6">道</span>
+      <span style="font-size:2rem;opacity:.5;color:var(--seal)">福</span>
+      <span style="font-size:1.8rem;opacity:.45;color:#7A4010">春</span>
+      <span style="font-size:1.5rem;opacity:.4">山</span>
+      <span style="font-size:2.2rem;opacity:.55;color:var(--amber)">境</span>
+      <span style="font-size:1.6rem;opacity:.4;color:var(--petal)">花</span>
+    </div>
+    <p style="font-size:.78rem;color:var(--ink);opacity:.4;margin-top:1rem;font-family:var(--f-b);max-width:52ch">Note: Ma Shan Zheng is loaded from Google Fonts CDN. At large scale these characters function as visual illustration — not decorative motifs but drawn objects with compositional weight, used like sumi-e brushwork across every section background.</p>
+  </div>
+</section>
+
+<!-- ── 04 LAYOUT ── -->
+<section class="doc-section ds-dark" id="layout">
+  <div class="hz-bg" style="font-size:clamp(22vw,36vw,440px);top:50%;left:-2vw;transform:translateY(-50%)">构</div>
+  <div class="sec-num">四</div>
+  <div class="sec-label reveal">04 — Page Layout &amp; Sections</div>
+  <h2 class="sec-h reveal">Eight movements. <em>One journey.</em></h2>
+  <p class="sec-body reveal">The page is structured as a sequence — a linear experience with a deliberate emotional arc. No sidebar navigation. No tabbed panels. The visitor moves forward through time, from the mythic (hero/dragon) to the material (menu/reservation), with the wave as the dramatic centre.</p>
+
+  <div class="layout-grid" style="margin-top:3rem">
+    <div class="section-card reveal">
+      <div class="sc-num">一</div>
+      <div class="sc-name">Hero</div>
+      <div class="sc-desc">Full viewport. Dark ink ground. Giant 龍 ghost. Cherry blossom canvas. SVG dragon. KOI logotype at max scale.</div>
+      <span class="sc-tag">Dark · Full-bleed</span>
+      <div class="sc-ghost">龍</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">二</div>
+      <div class="sc-name">Marquee</div>
+      <div class="sc-desc">Seal-red strip. Infinite horizontal ticker of Chinese characters and KOI branding. Cinematic break between hero and wave.</div>
+      <span class="sc-tag">Seal Red · Animated</span>
+      <div class="sc-ghost">·</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">三</div>
+      <div class="sc-name">Wave</div>
+      <div class="sc-desc">Pinned for 280% scroll. chinese-wave.png in 3-layer parallax canvas. Elastic character stamps: 水 墨 境. Central dramatic moment.</div>
+      <span class="sc-tag">Navy · Pinned · Parallax</span>
+      <div class="sc-ghost">水</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">四</div>
+      <div class="sc-name">Story</div>
+      <div class="sc-desc">Paper ground. Character-by-character heading reveal. Parallax 道 glyph. Ink brush SVG sweep. Two seal stamps.</div>
+      <span class="sc-tag">Paper · Split-text</span>
+      <div class="sc-ghost">道</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">五</div>
+      <div class="sc-name">Menu</div>
+      <div class="sc-desc">Dark. 6 dishes in auto-grid. Red lattice borders top/bottom. Ambient flat circles. Ghost 菜 at colossal scale. Stamp-in on scroll.</div>
+      <span class="sc-tag">Dark · Stamp-in</span>
+      <div class="sc-ghost">菜</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">六</div>
+      <div class="sc-name">Experience</div>
+      <div class="sc-desc">Dark. Three cards (一二三) cascade from left, bottom, right with rotateX perspective. Petal canvas at 50% opacity behind.</div>
+      <span class="sc-tag">Dark · Perspective</span>
+      <div class="sc-ghost">体</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">七</div>
+      <div class="sc-name">Reservation</div>
+      <div class="sc-desc">Warm paper ground. Giant 来 ghost. Koi fish SVG silhouette. Seal bounces in from 4× scale. Minimal form fields.</div>
+      <span class="sc-tag">Paper · Elastic seal</span>
+      <div class="sc-ghost">来</div>
+    </div>
+    <div class="section-card reveal">
+      <div class="sc-num">八</div>
+      <div class="sc-name">Footer</div>
+      <div class="sc-desc">Ink dark. Logo, address, copyright. Minimal. The KOI name in Cormorant at low opacity.</div>
+      <span class="sc-tag">Dark · Minimal</span>
+      <div class="sc-ghost">終</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── 05 MOTION ── -->
+<section class="doc-section ds-paper" id="motion">
+  <div class="hz-bg" style="font-size:clamp(20vw,34vw,420px);bottom:0;right:-1vw;color:var(--ink)">動</div>
+  <div class="sec-num" style="color:var(--ink);opacity:.05">五</div>
+  <div class="sec-label reveal">05 — Motion &amp; Animation</div>
+  <h2 class="sec-h reveal">Every frame <em>earns</em> its place</h2>
+  <p class="sec-body reveal">Animation is not decoration. Each motion effect is chosen for what it communicates: elastic stamps feel like a seal being pressed; character splits feel like calligraphy being written; wave parallax feels like standing at a harbour watching tides roll through depth. Motion follows Lenis smooth scroll for continuous inertia throughout.</p>
+
+  <div class="motion-row reveal">
+    <div class="motion-pill">Lenis 1.0 Smooth Scroll</div>
+    <div class="motion-pill">GSAP 3.12 + ScrollTrigger</div>
+    <div class="motion-pill">Canvas rAF Loops</div>
+    <div class="motion-pill">CSS Keyframe Marquee</div>
+    <div class="motion-pill">SVG stroke-dashoffset</div>
+  </div>
+
+  <div class="anim-grid" style="margin-top:3rem">
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Wave Parallax</div>
+      <div class="ac-body">chinese-wave.png drawn 3× on canvas at different heights, speeds and opacities. Back layer moves at 0.5px/frame, mid at 0.95, front at 1.6. Creates depth illusion of a real sea receding into distance.</div>
+      <span class="ac-tag">canvas · drawImage · rAF</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Pinned Wave Section</div>
+      <div class="ac-body">Section stays fixed for 280% of scroll height. GSAP ScrollTrigger monitors progress and fires elastic character stamps at 15%, 32%, 50%. Headline fades up at 68%. Gives cinematic dwell time inside the wave.</div>
+      <span class="ac-tag">ScrollTrigger · pin:true · elastic.out(1,.5)</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Character Stamp Reveals</div>
+      <div class="ac-body">水 墨 境 each drop from y:-140 at scale 1.8 with random rotation, landing with elastic.out easing. Feels like a chop/stamp being pressed onto the wave. Used for section headers and seals throughout.</div>
+      <span class="ac-tag">fromTo · scale:1.8→1 · rotateZ → 0</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Heading Split Reveal</div>
+      <div class="ac-body">Story heading text is split into individual characters by JS. Each character animates in with random rotation ±9° and y:60 offset, staggered 40ms. Feels like calligraphy being written one stroke at a time.</div>
+      <span class="ac-tag">innerHTML split · back.out(1.5) · stagger:.04</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Menu Stamp-In</div>
+      <div class="ac-body">Dish items scale from 1.25× with a slight random rotation and snap into place with back.out(1.8) — as if each menu card is being placed down on the table with a satisfying press.</div>
+      <span class="ac-tag">scale:1.25→1 · rotateZ:random · back.out(1.8)</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Experience Card Cascade</div>
+      <div class="ac-body">Three cards enter from different directions simultaneously — card 1 from x:-80 with rotateX:20, card 2 from y:60, card 3 from x:+80 with rotateX:20 — as if the triptych unfolds outward from a central point.</div>
+      <span class="ac-tag">translateX/Y · rotateX:20→0 · perspective:800px</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">Cherry Blossom Canvas</div>
+      <div class="ac-body">65 petals on hero, 32 on experience section. Each Petal has independent velocity, swing oscillation, rotation, scale and one of 7 flat pink tones. Petals are either 5-petal flowers or single ellipses — same probability split as a real bloom.</div>
+      <span class="ac-tag">canvas · Petal class · rAF · Math.sin swing</span>
+    </div>
+    <div class="anim-card reveal">
+      <div class="ac-title" style="color:var(--ink)">SVG Dragon Draw</div>
+      <div class="ac-body">Dragon SVG paths use stroke-dasharray and stroke-dashoffset animation — the dragon literally draws itself in ink over 3.8 seconds on page load. CSS animation, no JS required, with prefers-reduced-motion respect.</div>
+      <span class="ac-tag">stroke-dashoffset:4000→0 · 3.8s cubic-bezier</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── 06 GRAPHIC ELEMENTS ── -->
+<section class="doc-section ds-mid" id="elements">
+  <div class="hz-bg" style="font-size:clamp(22vw,36vw,440px);top:50%;right:-2vw;transform:translateY(-50%)">飾</div>
+  <div class="sec-num">六</div>
+  <div class="sec-label reveal">06 — Graphic Elements</div>
+  <h2 class="sec-h reveal">The <em>clutter</em> is the craft</h2>
+  <p class="sec-body reveal">Chinese visual tradition uses deliberate density. A bare surface is an unfinished thought. KOI's decorative system layers multiple elements at varying opacities to build visual richness without noise — each layer reads at its own depth.</p>
+
+  <hr class="sec-rule">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:2rem;margin-top:2rem">
+    <div class="reveal">
+      <div style="font-family:var(--f-zh);font-size:3rem;color:var(--paper-w);opacity:.6;margin-bottom:.5rem">龍鲤水道</div>
+      <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);opacity:.6;margin-bottom:.4rem">Ghost Glyphs</div>
+      <div class="sec-body" style="font-size:.82rem">Ma Shan Zheng characters at 30–80vw, 2–6% opacity, positioned as compositional anchors. Used in every section. As much illustration as typography.</div>
+    </div>
+    <div class="reveal">
+      <svg viewBox="0 0 120 55" width="120" style="margin-bottom:.75rem">
+        <path fill="#F0E8D8" opacity=".2" d="M15,42 C9,42 5,37 5,31 C5,27 9,23 14,23 C14,17 19,13 26,13 C29,10 33,9 38,11 C41,7 47,6 52,8 C57,5 64,5 68,10 C74,8 80,11 81,18 C86,17 91,21 90,28 C93,28 96,32 95,37 C93,41 88,43 83,42 L15,42 Z"/>
+      </svg>
+      <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--petal-lt);opacity:.6;margin-bottom:.4rem">Auspicious Clouds (祥云)</div>
+      <div class="sec-body" style="font-size:.82rem">Traditional Chinese cloud shapes used as floating SVG elements at 6–12% opacity. Three sizes placed throughout hero and reservation sections.</div>
+    </div>
+    <div class="reveal">
+      <div style="display:flex;gap:.75rem;margin-bottom:.75rem;align-items:center">
+        <div style="width:44px;height:44px;border:2px solid var(--seal);color:var(--seal);display:flex;align-items:center;justify-content:center;font-family:var(--f-zh);font-size:18px;transform:rotate(-11deg);opacity:.8">鲤</div>
+        <div style="width:36px;height:36px;border:2px solid var(--seal);color:var(--seal);display:flex;align-items:center;justify-content:center;font-family:var(--f-zh);font-size:15px;transform:rotate(7deg);opacity:.7">福</div>
+      </div>
+      <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--seal);opacity:.7;margin-bottom:.4rem">Red Seal Stamps</div>
+      <div class="sec-body" style="font-size:.82rem">Square border frames with Chinese characters at slight rotations. Used as authentic-looking 印章 (yìnzhāng) chops — a core Chinese artistic convention on paintings and documents.</div>
+    </div>
+    <div class="reveal">
+      <svg viewBox="0 0 80 70" width="80" style="margin-bottom:.75rem;opacity:.5">
+        <ellipse cx="40" cy="40" rx="34" ry="28" fill="#09060C" transform="rotate(-15,40,40)"/>
+        <ellipse cx="18" cy="56" rx="12" ry="8" fill="#09060C"/>
+        <circle cx="68" cy="16" r="5" fill="#09060C"/>
+        <circle cx="74" cy="30" r="3" fill="#09060C"/>
+      </svg>
+      <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--paper-m);opacity:.5;margin-bottom:.4rem">Ink Splash Marks</div>
+      <div class="sec-body" style="font-size:.82rem">Organic flat SVG blobs mimicking dried ink pools and splatter. Used at 18–25% opacity on the hero to reinforce the sumi-e, studio-of-a-painter atmosphere.</div>
+    </div>
+    <div class="reveal">
+      <div style="width:100%;height:8px;background:repeating-linear-gradient(90deg,var(--seal) 0,var(--seal) 4px,transparent 4px,transparent 12px);opacity:.5;margin-bottom:.75rem"></div>
+      <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);opacity:.6;margin-bottom:.4rem">Lattice Border (回纹)</div>
+      <div class="sec-body" style="font-size:.82rem">A CSS repeating pattern in seal red at the top and bottom of the menu section, referencing the traditional 回纹 key-fret border used on Chinese ceramics and architecture.</div>
+    </div>
+    <div class="reveal">
+      <svg viewBox="0 0 100 70" width="100" style="margin-bottom:.75rem;opacity:.55">
+        <path stroke="#09060C" stroke-width="3.5" fill="none" stroke-linecap="round" d="M5,65 C18,48 35,32 55,20 C68,12 82,8 90,2"/>
+        <g fill="#D44F72">
+          <ellipse cx="90" cy="2" rx="6" ry="9" transform="rotate(0,90,2)"/>
+          <ellipse cx="90" cy="2" rx="6" ry="9" transform="rotate(72,90,2)"/>
+          <ellipse cx="90" cy="2" rx="6" ry="9" transform="rotate(144,90,2)"/>
+          <ellipse cx="90" cy="2" rx="6" ry="9" transform="rotate(216,90,2)"/>
+          <ellipse cx="90" cy="2" rx="6" ry="9" transform="rotate(288,90,2)"/>
+        </g>
+        <circle cx="90" cy="2" r="3" fill="#C46820"/>
+      </svg>
+      <div style="font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--petal-lt);opacity:.6;margin-bottom:.4rem">Cherry Blossom Branch</div>
+      <div class="sec-body" style="font-size:.82rem">Hand-crafted SVG branch in flat ink strokes with flat-color 5-petal blossoms and amber stamens. Positioned in the upper-left of the hero as a compositional counterweight to the dragon on the right.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CLOSING ── -->
+<section class="doc-section ds-dark" style="text-align:center;min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center">
+  <div class="hz-bg" style="font-size:clamp(40vw,65vw,750px);top:50%;left:50%;transform:translate(-50%,-50%)">成</div>
+  <div style="position:relative;z-index:2">
+    <div class="inline-seal reveal">成</div>
+    <h2 class="sec-h reveal" style="font-size:clamp(2rem,6vw,5rem);margin-top:1.5rem">The page is <em>alive</em></h2>
+    <p class="sec-body reveal" style="margin:1.5rem auto;text-align:center;max-width:48ch;opacity:.4">This document represents the design system behind the KOI landing page. All elements shown are implemented and live. The artifact is available for review at the URL provided separately.</p>
+    <div class="reveal" style="margin-top:2.5rem;font-family:var(--f-zh);font-size:clamp(1.5rem,4vw,3rem);color:var(--petal);opacity:.4;letter-spacing:.4em">锦 鲤 · K O I</div>
+    <div class="reveal" style="margin-top:1rem;font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--paper-m);opacity:.2">WeZero Franchise OS · October 2025</div>
+  </div>
+</section>
+
+<script>
+// ── PETAL SYSTEM (cover section) ──
+const PC=['#E8A0BC','#F4B8CC','#F8D2E4','#DC7FA8','#EFA0C0'];
+class Petal{
+  constructor(W,H){this.W=W;this.H=H;this.init(true)}
+  init(sp){
+    this.x=Math.random()*this.W;this.y=sp?Math.random()*this.H:(-12-Math.random()*40);
+    this.vx=(Math.random()-.5)*1.;this.vy=.5+Math.random()*1.2;
+    this.a=Math.random()*Math.PI*2;this.va=(Math.random()-.5)*.06;
+    this.r=4+Math.random()*7;this.al=.2+Math.random()*.4;
+    this.col=PC[Math.floor(Math.random()*PC.length)];
+    this.sw=Math.random()*Math.PI*2;this.ss=.01+Math.random()*.016;
+    this.fl=Math.random()>.45;
+  }
+  upd(){
+    this.sw+=this.ss;this.vx+=Math.sin(this.sw)*.022;
+    this.x+=this.vx;this.y+=this.vy;this.a+=this.va;
+    if(this.y>this.H+20)this.init(false);
+  }
+  draw(ctx){
+    ctx.save();ctx.globalAlpha=this.al;ctx.translate(this.x,this.y);ctx.rotate(this.a);ctx.fillStyle=this.col;
+    if(this.fl){for(let i=0;i<5;i++){ctx.save();ctx.rotate(i*Math.PI*2/5);ctx.beginPath();ctx.ellipse(0,-this.r*.55,this.r*.32,this.r*.58,0,0,Math.PI*2);ctx.fill();ctx.restore()}}
+    else{ctx.beginPath();ctx.ellipse(0,0,this.r*.45,this.r,0,0,Math.PI*2);ctx.fill()}
+    ctx.restore();
+  }
+}
+(function(){
+  const cv=document.getElementById('coverCanvas');if(!cv)return;
+  cv.width=cv.parentElement.offsetWidth;cv.height=cv.parentElement.offsetHeight;
+  const ctx=cv.getContext('2d');
+  const ps=Array.from({length:45},()=>new Petal(cv.width,cv.height));
+  (function lp(){ctx.clearRect(0,0,cv.width,cv.height);ps.forEach(p=>{p.upd();p.draw(ctx)});requestAnimationFrame(lp)})();
+})();
+
+// ── GSAP REVEALS ──
+window.addEventListener('DOMContentLoaded',()=>{
+  if(!window.gsap||!window.ScrollTrigger)return;
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Cover entrance
+  const tl=gsap.timeline({delay:.1});
+  tl.from('#cvEye',{opacity:0,y:12,duration:.8,ease:'power2.out'})
+    .from('#cvTitle',{opacity:0,y:80,filter:'blur(14px)',duration:1.4,ease:'power3.out'},'-.4')
+    .from('#cvSub',{opacity:0,y:16,duration:.8,ease:'power2.out'},'-.6')
+    .from('#cvZh',{opacity:0,y:12,duration:.8,ease:'power2.out'},'-.5')
+    .from('#cvMeta',{opacity:0,duration:.8,ease:'power2.out'},'-.4')
+    .from('.cover-seal',{opacity:0,scale:.4,stagger:.12,duration:.6,ease:'back.out(2)'},'-.4')
+    .from('.cover-branch',{opacity:0,x:-30,duration:1.2,ease:'power2.out'},'-.8');
+
+  // Section reveals
+  gsap.utils.toArray('.reveal').forEach(el=>{
+    gsap.to(el,{
+      scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'},
+      opacity:1,y:0,duration:1,ease:'power3.out'
+    });
+  });
+
+  // Palette swatches
+  gsap.from('.swatch',{
+    scrollTrigger:{trigger:'.palette-grid',start:'top 85%',toggleActions:'play none none none'},
+    opacity:0,scale:.88,stagger:.05,duration:.55,ease:'back.out(1.6)'
+  });
+
+  // Layout cards cascade
+  gsap.from('.section-card',{
+    scrollTrigger:{trigger:'.layout-grid',start:'top 85%',toggleActions:'play none none none'},
+    opacity:0,y:40,stagger:.07,duration:.7,ease:'power3.out'
+  });
+
+  // Anim cards
+  gsap.from('.anim-card',{
+    scrollTrigger:{trigger:'.anim-grid',start:'top 85%',toggleActions:'play none none none'},
+    opacity:0,x:-30,stagger:.08,duration:.7,ease:'power2.out'
+  });
+
+  // Ghost glyph parallax
+  gsap.utils.toArray('.hz-bg').forEach(el=>{
+    gsap.to(el,{
+      scrollTrigger:{trigger:el.parentElement,start:'top bottom',end:'bottom top',scrub:2},
+      y:-80
+    });
+  });
+});
+</script>

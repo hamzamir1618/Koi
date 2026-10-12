@@ -1,0 +1,636 @@
+﻿<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>KOI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+/* ── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  --ink:       #09060C;
+  --ink-mid:   #1A1224;
+  --paper:     #F0E8D8;
+  --paper-w:   #EBE0CC;
+  --paper-m:   #C8BAA0;
+  --petal:     #D44F72;
+  --petal-lt:  #ECA8C0;
+  --amber:     #C46820;
+  --seal:      #C02218;
+  --gold:      #B88C28;
+  --navy:      #0C1E3C;
+  --navy-m:    #163556;
+  --navy-lt:   #2A5698;
+  --wave-foam: #D4C4A0;
+  --f-zh:   'Ma Shan Zheng', serif;
+  --f-disp: 'Cormorant Garamond', Georgia, serif;
+  --f-body: 'EB Garamond', Georgia, serif;
+  color-scheme: dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+*{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--paper-w);font-family:var(--f-body);font-size:18px;line-height:1.65;overflow-x:hidden}
+
+
+/* ── HERO ──────────────────────────────────────────────────── */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:flex-start;overflow:hidden;background:var(--ink)}
+#petalCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:4}
+
+.hz-ghost{position:absolute;font-family:var(--f-zh);pointer-events:none;user-select:none;line-height:1}
+.hz-dragon{font-size:clamp(55vw,75vw,900px);color:var(--paper-w);opacity:.025;top:50%;left:50%;transform:translate(-44%,-50%);z-index:1;will-change:transform}
+.hz-water{font-size:clamp(8rem,18vw,220px);color:var(--petal);opacity:.06;top:8%;left:6%;z-index:1}
+.hz-spring{font-size:clamp(5rem,10vw,130px);color:var(--amber);opacity:.07;bottom:12%;right:8%;z-index:1}
+.hz-mountain{font-size:clamp(4rem,8vw,100px);color:var(--paper-w);opacity:.05;top:50%;left:2%;z-index:1}
+
+.deco{position:absolute;pointer-events:none}
+.blossom-branch{top:0;left:-1%;width:clamp(140px,16vw,220px);max-height:55vh;object-fit:contain;object-position:top left;opacity:.88;z-index:2}
+
+.cloud-a{top:18%;right:28%;width:180px;opacity:.1;z-index:2}
+.cloud-b{bottom:22%;left:18%;width:130px;opacity:.08;z-index:2;transform:scaleX(-1)}
+.cloud-c{top:55%;right:5%;width:110px;opacity:.07;z-index:2}
+
+.splash-a{top:35%;right:42%;width:90px;opacity:.25;z-index:2}
+.splash-b{bottom:30%;right:30%;width:60px;opacity:.18;z-index:2}
+.splash-c{top:70%;left:38%;width:45px;opacity:.2;z-index:2}
+
+.seal-stamp{position:absolute;display:flex;align-items:center;justify-content:center;border:2px solid var(--seal);color:var(--seal);font-family:var(--f-zh);z-index:5;pointer-events:none}
+.seal-a{width:54px;height:54px;font-size:22px;top:22%;right:16%;transform:rotate(-11deg);opacity:.8}
+.seal-b{width:44px;height:44px;font-size:18px;bottom:18%;left:8%;transform:rotate(7deg);opacity:.7}
+.seal-c{width:60px;height:28px;font-size:14px;letter-spacing:.05em;top:78%;left:44%;transform:rotate(-4deg);opacity:.65}
+
+.h-rule{position:absolute;left:0;right:0;height:1px;background:rgba(240,232,216,.06);z-index:2}
+
+.hero-dragon-wrap{position:absolute;right:-3%;top:0;bottom:0;width:clamp(240px,38vw,520px);z-index:3;pointer-events:none;display:flex;align-items:center}
+.hero-dragon-svg{width:100%;height:100%}
+.hero-dragon-svg path{fill:none;stroke:var(--paper-w);stroke-linecap:round;stroke-linejoin:round}
+.db{stroke-width:5}
+.dm{stroke-width:2.5;opacity:.7}
+.dl{stroke-width:1.5;opacity:.45}
+.d-draw{stroke-dasharray:4000;stroke-dashoffset:4000;animation:inkDraw 3.8s cubic-bezier(.4,0,.2,1) forwards .5s}
+@keyframes inkDraw{to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){.d-draw{animation:none;stroke-dashoffset:0}}
+
+.hero-content{position:relative;z-index:6;padding-inline:clamp(1.5rem,6vw,5rem);padding-block:9rem 5rem;max-width:700px}
+.hero-eyebrow{font-family:var(--f-body);font-size:.7rem;letter-spacing:.32em;text-transform:uppercase;color:var(--petal-lt);opacity:.75;margin-bottom:2rem}
+.hero-koi{font-family:var(--f-disp);font-size:clamp(6rem,20vw,200px);font-weight:300;letter-spacing:.28em;color:var(--paper-w);line-height:.88;padding-right:.28em}
+.hero-koi-zh{display:block;font-family:var(--f-zh);font-size:clamp(1.5rem,4vw,48px);color:var(--petal-lt);opacity:.52;letter-spacing:.35em;margin-top:1rem}
+.hero-tagline{font-family:var(--f-disp);font-style:italic;font-size:clamp(1rem,2.2vw,1.3rem);color:var(--paper-m);opacity:.58;margin-top:2rem}
+.hero-cta{display:flex;gap:2rem;margin-top:3rem;flex-wrap:wrap;align-items:center}
+.btn-p{position:relative;font-family:var(--f-body);font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;background:var(--seal);color:var(--paper-w);padding:.9rem 2.2rem;text-decoration:none;display:inline-flex;align-items:center;gap:.75rem;transition:opacity .3s}
+.btn-p::after{content:'';position:absolute;inset:4px;border:1px solid rgba(240,232,216,.2);pointer-events:none}
+.btn-p:hover{opacity:.82}
+.btn-p-zh{font-family:var(--f-zh);font-size:1.15rem;opacity:.7;line-height:1}
+.btn-g{font-family:var(--f-body);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--paper-m);text-decoration:none;opacity:.5;display:inline-flex;align-items:center;gap:.5rem;padding-bottom:.2rem;border-bottom:1px solid rgba(240,232,216,.18);transition:opacity .3s}
+.btn-g:hover{opacity:1}
+.btn-g-zh{font-family:var(--f-zh);font-size:.95rem;opacity:.65}
+.scroll-ind{position:absolute;bottom:2rem;left:clamp(1.5rem,6vw,5rem);display:flex;flex-direction:column;align-items:center;gap:.45rem;z-index:6;pointer-events:none}
+.scroll-ind-line{width:1px;height:42px;background:rgba(240,232,216,.18);transform-origin:top;animation:scrollDrop 2.5s ease-in-out infinite}
+@keyframes scrollDrop{0%{transform:scaleY(0);opacity:0}35%{opacity:1}100%{transform:scaleY(1);opacity:.18}}
+.scroll-ind-zh{font-family:var(--f-zh);font-size:.78rem;color:var(--paper-m);opacity:.22;writing-mode:vertical-rl;letter-spacing:.15em}
+
+/* ── MARQUEE STRIP ─────────────────────────────────────────── */
+.marquee-strip{background:var(--seal);padding:.55rem 0;overflow:hidden;position:relative;z-index:10}
+.marquee-inner{display:flex;white-space:nowrap;animation:marqueeRun 24s linear infinite}
+.marquee-inner span{font-family:var(--f-zh);font-size:.95rem;color:var(--paper-w);padding:0 2rem;opacity:.9}
+@keyframes marqueeRun{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── WAVE SECTION ──────────────────────────────────────────── */
+.wave-section{position:relative;height:100vh;overflow:hidden;background:var(--navy)}
+#waveCanvas{position:absolute;inset:0;width:100%;height:100%}
+.wave-content{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:5;pointer-events:none;text-align:center;padding-inline:2rem}
+.wave-stamps{display:flex;gap:3vw;align-items:baseline;justify-content:center;margin-bottom:1.5rem}
+.wstamp{font-family:var(--f-zh);font-size:clamp(4rem,12vw,10rem);color:var(--paper-w);opacity:0;line-height:1;text-shadow:0 0 40px rgba(42,86,152,.6)}
+.wave-hl{font-family:var(--f-disp);font-size:clamp(2rem,5vw,4.5rem);font-weight:300;font-style:italic;color:var(--paper-w);opacity:0}
+.wave-sub{font-family:var(--f-zh);font-size:clamp(1rem,3vw,2rem);color:var(--wave-foam);opacity:0;margin-top:.75rem;letter-spacing:.25em}
+
+/* ── STORY SECTION ─────────────────────────────────────────── */
+.story-section{background:var(--paper);color:var(--ink);padding:9rem clamp(1.5rem,8vw,7rem);position:relative;overflow:hidden}
+.story-glyph{position:absolute;font-family:var(--f-zh);font-size:clamp(28vw,45vw,560px);color:var(--ink);opacity:.038;top:50%;right:-3vw;transform:translateY(-50%);pointer-events:none;user-select:none;line-height:1;will-change:transform}
+.story-brush{position:absolute;bottom:0;left:0;right:0;pointer-events:none;opacity:.08}
+.story-inner{max-width:760px;position:relative;z-index:2}
+.s-label{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);opacity:.38;margin-bottom:1.25rem}
+.s-h2{font-family:var(--f-disp);font-size:clamp(2.5rem,6.5vw,5.5rem);font-weight:300;line-height:1.05;color:var(--ink);text-wrap:balance}
+.s-h2 em{font-style:italic;color:#4A3020}
+.char{display:inline-block}
+.s-body{font-family:var(--f-body);font-size:1.05rem;line-height:1.82;color:#3A2A18;margin-top:1.75rem;max-width:55ch}
+.s-seal-row{display:flex;gap:1.5rem;margin-top:2.5rem;align-items:center}
+.s-seal{display:inline-flex;align-items:center;justify-content:center;border:2px solid var(--seal);color:var(--seal);font-family:var(--f-zh);font-size:24px}
+.s-seal-sq{width:58px;height:58px;transform:rotate(-9deg);opacity:.82}
+.s-seal-rect{width:80px;height:36px;font-size:16px;letter-spacing:.04em;transform:rotate(5deg);opacity:.7}
+.story-deco-cloud{position:absolute;top:12%;right:6%;width:140px;opacity:.07;pointer-events:none}
+.story-deco-splash{position:absolute;bottom:15%;left:68%;width:70px;opacity:.1;pointer-events:none}
+
+/* ── MENU SECTION ──────────────────────────────────────────── */
+.menu-section{background:var(--ink-mid);padding:8rem clamp(1.5rem,6vw,5rem);position:relative;overflow:hidden}
+.menu-lattice{position:absolute;top:0;left:0;right:0;height:8px;background:repeating-linear-gradient(90deg,var(--seal) 0,var(--seal) 4px,transparent 4px,transparent 12px);opacity:.4}
+.menu-lattice-b{top:unset;bottom:0}
+.menu-bg-text{position:absolute;font-family:var(--f-zh);font-size:clamp(25vw,40vw,500px);color:var(--paper-w);opacity:.02;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;line-height:1}
+.menu-glow{position:absolute;border-radius:50%;pointer-events:none}
+.menu-glow-a{width:45vw;height:45vw;top:10%;right:0%;background:rgba(196,104,32,.07)}
+.menu-glow-b{width:35vw;height:35vw;bottom:5%;left:-5%;background:rgba(212,79,114,.06)}
+.menu-head-row{display:flex;align-items:baseline;gap:1.5rem;flex-wrap:wrap;margin-bottom:4.5rem;position:relative;z-index:2}
+.menu-head{font-family:var(--f-disp);font-size:clamp(3rem,9vw,8rem);font-weight:300;color:var(--paper-w);line-height:.9}
+.menu-head-zh{font-family:var(--f-zh);font-size:clamp(1.75rem,4vw,3.5rem);color:var(--amber);opacity:.62}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:3rem 4.5rem;position:relative;z-index:2}
+.menu-item{border-top:1px solid rgba(240,232,216,.07);padding-top:1.5rem}
+.mi-name{font-family:var(--f-disp);font-size:1.45rem;color:var(--paper-w);line-height:1.2;margin-bottom:.4rem}
+.mi-desc{font-family:var(--f-body);font-style:italic;font-size:.88rem;color:var(--paper-m);opacity:.55;line-height:1.6}
+.mi-price{font-family:var(--f-body);font-size:.78rem;letter-spacing:.1em;color:var(--amber);margin-top:.75rem}
+
+/* ── EXPERIENCE SECTION ────────────────────────────────────── */
+.exp-section{background:var(--ink);padding:9rem clamp(1.5rem,6vw,5rem);position:relative;overflow:hidden}
+#expPetalCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.5}
+.exp-head-group{text-align:center;margin-bottom:5.5rem;position:relative;z-index:2}
+.exp-ghost{display:block;font-family:var(--f-zh);font-size:clamp(6rem,16vw,14rem);color:var(--paper-w);opacity:.025;line-height:1;margin-bottom:-1.5rem;user-select:none}
+.exp-head{font-family:var(--f-disp);font-size:clamp(2.5rem,6vw,5.5rem);font-weight:300;color:var(--paper-w)}
+.exp-head em{font-style:italic;color:var(--amber)}
+.exp-sub{font-family:var(--f-disp);font-style:italic;font-size:1.05rem;color:var(--paper-m);opacity:.38;margin-top:.75rem}
+.exp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3rem;position:relative;z-index:2}
+@media(max-width:680px){.exp-grid{grid-template-columns:1fr}}
+.exp-card{transform:translateY(60px);opacity:0;perspective:800px}
+.exp-num{font-family:var(--f-zh);font-size:2.75rem;color:var(--amber);opacity:.4;line-height:1;margin-bottom:1rem}
+.exp-title{font-family:var(--f-disp);font-size:1.4rem;font-style:italic;color:var(--paper-w);margin-bottom:.75rem}
+.exp-body{font-size:.88rem;color:var(--paper-m);opacity:.5;line-height:1.75}
+
+/* ── RESERVATION SECTION ───────────────────────────────────── */
+.rsv-section{background:var(--paper-w);color:var(--ink);padding:9rem clamp(1.5rem,10vw,8rem);text-align:center;position:relative;overflow:hidden}
+.rsv-bg-zh{position:absolute;font-family:var(--f-zh);font-size:clamp(42vw,60vw,700px);color:var(--ink);opacity:.022;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;user-select:none;line-height:1}
+.rsv-koi-fish{position:absolute;bottom:0;right:0;width:clamp(200px,30vw,400px);opacity:.18;pointer-events:none}
+.rsv-cloud{position:absolute;top:10%;left:5%;width:160px;opacity:.08;pointer-events:none}
+.rsv-seal{display:inline-flex;align-items:center;justify-content:center;width:68px;height:68px;border:2px solid var(--seal);color:var(--seal);font-family:var(--f-zh);font-size:28px;transform:rotate(-7deg);margin-bottom:2.5rem;opacity:.8;position:relative;z-index:2}
+.rsv-head{font-family:var(--f-disp);font-size:clamp(2.5rem,7vw,6.5rem);font-weight:300;color:var(--ink);line-height:1;margin-bottom:1.25rem;position:relative;z-index:2}
+.rsv-sub{font-family:var(--f-disp);font-style:italic;font-size:1.1rem;color:#4A3820;opacity:.56;margin-bottom:3.5rem;max-width:42ch;margin-inline:auto;position:relative;z-index:2}
+.rsv-form{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap;max-width:680px;margin-inline:auto;position:relative;z-index:2}
+.rsv-inp{font-family:var(--f-body);font-size:.9rem;font-style:italic;background:transparent;border:none;border-bottom:1px solid var(--paper-m);padding:.75rem 0;color:var(--ink);outline:none;width:160px;text-align:center}
+.rsv-inp::placeholder{color:var(--ink);opacity:.3}
+.rsv-inp:focus{border-bottom-color:var(--ink)}
+.rsv-btn{display:flex;align-items:center;justify-content:center;gap:.65rem;font-family:var(--f-body);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;background:var(--seal);color:var(--paper-w);padding:1rem 3rem;border:none;cursor:pointer;margin:2.5rem auto 0;transition:opacity .3s,transform .12s;position:relative;z-index:2}
+.rsv-btn::after{content:'';position:absolute;inset:4px;border:1px solid rgba(240,232,216,.2);pointer-events:none}
+.rsv-btn:hover{opacity:.82}
+.rsv-btn:active{transform:scale(.96)}
+.rsv-btn-zh{font-family:var(--f-zh);font-size:1.1rem;opacity:.72;line-height:1}
+.rsv-hours{font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);opacity:.3;margin-top:3rem;position:relative;z-index:2}
+
+/* ── BRUSH-SWEEP SECTION TRANSITION ─────────────────────────── */
+.brush-sweep{position:absolute;top:0;left:0;width:0;height:3px;background:var(--seal);z-index:15;pointer-events:none;opacity:.9}
+
+/* ── FOOTER ────────────────────────────────────────────────── */
+footer{background:var(--ink);padding:3.5rem clamp(1.5rem,6vw,5rem);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1.5rem}
+.ft-logo{font-family:var(--f-disp);font-size:1.5rem;font-weight:300;letter-spacing:.55em;color:var(--paper-w);opacity:.32;padding-right:.55em}
+.ft-info{font-size:.7rem;letter-spacing:.15em;color:var(--paper-m);opacity:.22;text-transform:uppercase}
+</style>
+
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <canvas id="petalCanvas"></canvas>
+  <div class="hz-ghost hz-dragon" id="heroGlyph">龍</div>
+  <div class="hz-ghost hz-water" id="hzWater">水</div>
+  <div class="hz-ghost hz-spring">春</div>
+  <div class="hz-ghost hz-mountain">山</div>
+  <div class="h-rule" style="top:22%"></div>
+  <div class="h-rule" style="bottom:18%"></div>
+  <img class="deco blossom-branch" src="blossom-branch.png" alt="" aria-hidden="true">
+
+  <svg class="deco cloud-a" viewBox="0 0 180 75" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#F0E8D8" d="M22,58 C14,58 8,52 8,44 C8,38 12,33 18,32 C18,24 24,18 32,18 C35,14 40,12 46,14 C49,9 55,7 62,9 C66,5 73,4 78,8 C84,5 91,6 94,12 C100,10 108,13 109,21 C115,19 122,23 122,31 C128,30 134,35 133,42 C137,42 140,46 139,52 C137,57 132,60 127,59 L22,59 Z"/>
+    <path fill="#F0E8D8" d="M8,44 C2,43 -2,38 2,33 C5,29 11,28 14,32"/>
+    <path fill="#F0E8D8" d="M133,42 C139,40 144,35 141,29 C138,24 131,23 128,28"/>
+  </svg>
+  <svg class="deco cloud-b" viewBox="0 0 180 75" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#F0E8D8" d="M22,58 C14,58 8,52 8,44 C8,38 12,33 18,32 C18,24 24,18 32,18 C35,14 40,12 46,14 C49,9 55,7 62,9 C66,5 73,4 78,8 C84,5 91,6 94,12 C100,10 108,13 109,21 C115,19 122,23 122,31 C128,30 134,35 133,42 C137,42 140,46 139,52 C137,57 132,60 127,59 L22,59 Z"/>
+  </svg>
+  <svg class="deco cloud-c" viewBox="0 0 180 75" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#F0E8D8" d="M22,58 C14,58 8,52 8,44 C8,38 12,33 18,32 C18,24 24,18 32,18 C35,14 40,12 46,14 C49,9 55,7 62,9 C66,5 73,4 78,8 C84,5 91,6 94,12 C100,10 108,13 109,21 C115,19 122,23 122,31 C128,30 134,35 133,42 Z"/>
+  </svg>
+
+  <svg class="deco splash-a" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="45" cy="48" rx="38" ry="32" fill="#09060C" transform="rotate(-15,45,48)"/>
+    <ellipse cx="22" cy="64" rx="14" ry="9" fill="#09060C"/>
+    <circle cx="72" cy="20" r="5" fill="#09060C"/>
+    <circle cx="80" cy="38" r="3" fill="#09060C"/>
+    <circle cx="68" cy="10" r="2.5" fill="#09060C"/>
+    <ellipse cx="12" cy="30" rx="7" ry="4" fill="#09060C" transform="rotate(20,12,30)"/>
+  </svg>
+  <svg class="deco splash-b" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="30" cy="32" rx="26" ry="22" fill="#09060C" transform="rotate(25,30,32)"/>
+    <circle cx="52" cy="14" r="4" fill="#09060C"/>
+    <circle cx="8" cy="50" r="3" fill="#09060C"/>
+  </svg>
+  <svg class="deco splash-c" viewBox="0 0 45 45" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="22" cy="22" rx="18" ry="16" fill="#09060C" transform="rotate(-10,22,22)"/>
+    <circle cx="38" cy="8" r="3" fill="#09060C"/>
+  </svg>
+
+  <div class="seal-stamp seal-a">鲤</div>
+  <div class="seal-stamp seal-b">福</div>
+  <div class="seal-stamp seal-c" style="font-family:var(--f-body);font-style:italic;font-size:12px;letter-spacing:.08em">Est. 2025</div>
+
+  <div class="hero-dragon-wrap" id="heroDragonWrap">
+    <img class="hero-dragon-svg" src="dragon.png" alt="" aria-hidden="true" style="width:100%;height:100%;object-fit:contain;object-position:center">
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-eyebrow" id="hEyebrow">Fine Dining · Ink &amp; Flame · Shanghai Inspired</div>
+    <h1 class="hero-koi" id="hKoi">KOI</h1>
+    <span class="hero-koi-zh" id="hZh">锦 鲤</span>
+    <p class="hero-tagline" id="hTagline">Eight hundred years of ceremony. One room in London.</p>
+    <div class="hero-cta" id="hCta">
+      <a href="#reserve" class="btn-p"><span class="btn-p-zh">来</span>Reserve a Table</a>
+      <a href="#menu" class="btn-g"><span class="btn-g-zh">菜</span>Explore the Menu →</a>
+    </div>
+  </div>
+  <div class="scroll-ind">
+    <div class="scroll-ind-line"></div>
+    <span class="scroll-ind-zh">向下</span>
+  </div>
+</section>
+
+<!-- MARQUEE STRIP -->
+<div class="marquee-strip" aria-hidden="true">
+  <div class="marquee-inner">
+    <span>锦鲤</span><span>·</span><span>龙</span><span>·</span><span>水墨</span><span>·</span>
+    <span>Fine Dining</span><span>·</span><span>春</span><span>·</span><span>道</span><span>·</span>
+    <span>KOI</span><span>·</span><span>花</span><span>·</span><span>山水</span><span>·</span>
+    <span>锦鲤</span><span>·</span><span>龙</span><span>·</span><span>水墨</span><span>·</span>
+    <span>Fine Dining</span><span>·</span><span>春</span><span>·</span><span>道</span><span>·</span>
+    <span>KOI</span><span>·</span><span>花</span><span>·</span><span>山水</span><span>·</span>
+  </div>
+</div>
+
+<!-- WAVE SECTION -->
+<section class="wave-section" id="waves">
+  <canvas id="waveCanvas"></canvas>
+  <div class="wave-content">
+    <div class="wave-stamps">
+      <div class="wstamp" id="wS1">水</div>
+      <div class="wstamp" id="wS2">墨</div>
+      <div class="wstamp" id="wS3">境</div>
+    </div>
+    <h2 class="wave-hl" id="wHL">The tide does not ask permission.</h2>
+    <div class="wave-sub" id="wSub">水墨之境</div>
+  </div>
+</section>
+
+<!-- STORY -->
+<section class="story-section" id="story">
+  <svg class="story-brush" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill="#09060C" d="M0,20 C200,60 400,10 600,40 C800,70 1000,15 1200,45 C1320,60 1400,30 1440,40 L1440,80 L0,80 Z"/>
+  </svg>
+  <div class="story-parallax-glyph story-glyph" id="storyGlyph">道</div>
+  <svg class="story-deco-cloud" viewBox="0 0 180 75" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#09060C" d="M22,58 C14,58 8,52 8,44 C8,38 12,33 18,32 C18,24 24,18 32,18 C35,14 40,12 46,14 C49,9 55,7 62,9 C66,5 73,4 78,8 C84,5 91,6 94,12 C100,10 108,13 109,21 C115,19 122,23 122,31 C128,30 134,35 133,42 C137,42 140,46 139,52 C137,57 132,60 127,59 L22,59 Z"/>
+  </svg>
+  <svg class="story-deco-splash" viewBox="0 0 70 70" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <ellipse cx="35" cy="38" rx="30" ry="25" fill="#09060C" transform="rotate(-20,35,38)"/>
+    <circle cx="58" cy="12" r="5" fill="#09060C"/>
+    <circle cx="65" cy="28" r="3" fill="#09060C"/>
+  </svg>
+  <div class="story-inner">
+    <div class="s-label reveal">Our Story</div>
+    <h2 class="s-h2 split-me" id="storyHead">Born from <em>ink, flame</em> &amp; memory</h2>
+    <p class="s-body reveal">
+      KOI was born from a single obsession: to honour the ancient with the precise. Our kitchen traces its lineage to the imperial courts of the Tang dynasty, where food was not merely sustenance but ceremony — a living painting, a brushstroke on silk.
+    </p>
+    <p class="s-body reveal">
+      Every dish is composed the way a master calligrapher approaches blank paper — with patience, intention, and the understanding that restraint is the most powerful stroke of all.
+    </p>
+    <div class="s-seal-row reveal">
+      <div class="s-seal s-seal-sq">鲤</div>
+      <div class="s-seal s-seal-rect">KOI · 锦鲤</div>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu-section" id="menu">
+  <div class="menu-lattice"></div>
+  <div class="menu-lattice menu-lattice-b"></div>
+  <div class="menu-bg-text">菜</div>
+  <div class="menu-glow menu-glow-a"></div>
+  <div class="menu-glow menu-glow-b"></div>
+  <div class="menu-head-row">
+    <h2 class="menu-head reveal">The Menu</h2>
+    <span class="menu-head-zh reveal">菜单</span>
+  </div>
+  <div class="menu-grid">
+    <div class="menu-item stamp-item">
+      <div class="mi-name">Sichuan Pepper Duck</div>
+      <div class="mi-desc">Mandarin reduction, fermented black bean, crispy lotus root</div>
+      <div class="mi-price">£ 42</div>
+    </div>
+    <div class="menu-item stamp-item">
+      <div class="mi-name">Dragon Well Salmon</div>
+      <div class="mi-desc">Cold-smoked with Longjing tea, pickled cucumber, sesame oil</div>
+      <div class="mi-price">£ 36</div>
+    </div>
+    <div class="menu-item stamp-item">
+      <div class="mi-name">Jasmine Sea Bass</div>
+      <div class="mi-desc">Steamed whole, lotus blossom broth, chrysanthemum oil</div>
+      <div class="mi-price">£ 48</div>
+    </div>
+    <div class="menu-item stamp-item">
+      <div class="mi-name">Black Sesame Dan Dan</div>
+      <div class="mi-desc">Slow-braised pork, Sichuan numbing oil, hand-pulled noodles</div>
+      <div class="mi-price">£ 28</div>
+    </div>
+    <div class="menu-item stamp-item">
+      <div class="mi-name">Five Spice Short Rib</div>
+      <div class="mi-desc">72-hour braise, osmanthus glaze, compressed daikon, micro shiso</div>
+      <div class="mi-price">£ 54</div>
+    </div>
+    <div class="menu-item stamp-item">
+      <div class="mi-name">Osmanthus Tofu</div>
+      <div class="mi-desc">Handmade silken tofu, honey osmanthus, winter melon consommé</div>
+      <div class="mi-price">£ 22</div>
+    </div>
+  </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="exp-section" id="experience">
+  <canvas id="expPetalCanvas"></canvas>
+  <div class="exp-head-group">
+    <span class="exp-ghost">体验</span>
+    <h2 class="exp-head reveal">The <em>Experience</em></h2>
+    <p class="exp-sub reveal">Dinner begins before you sit down.</p>
+  </div>
+  <div class="exp-grid">
+    <div class="exp-card" id="eCard1">
+      <div class="exp-num">一</div>
+      <div class="exp-title">The Space</div>
+      <div class="exp-body">Ivory silk canopies, ink-washed stone, paper lanterns hung low enough to touch. The room was designed so that nowhere you look is accidental.</div>
+    </div>
+    <div class="exp-card" id="eCard2">
+      <div class="exp-num">二</div>
+      <div class="exp-title">The Ritual</div>
+      <div class="exp-body">Dinner begins with the ceremonial pouring of aged pu-erh and ends with handwritten fortune characters drawn at your table by the chef.</div>
+    </div>
+    <div class="exp-card" id="eCard3">
+      <div class="exp-num">三</div>
+      <div class="exp-title">The Craft</div>
+      <div class="exp-body">The kitchen has no wall. You watch the wok smoke, the ladle arc, the knife go still. It is not a show — it is just the work, made visible.</div>
+    </div>
+  </div>
+</section>
+
+<!-- RESERVATION -->
+<section class="rsv-section" id="reserve">
+  <div class="rsv-bg-zh">来</div>
+  <img class="rsv-koi-fish" src="koi-fish.png" alt="" aria-hidden="true">
+  <svg class="rsv-cloud" viewBox="0 0 180 75" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#09060C" d="M22,58 C14,58 8,52 8,44 C8,38 12,33 18,32 C18,24 24,18 32,18 C35,14 40,12 46,14 C49,9 55,7 62,9 C66,5 73,4 78,8 C84,5 91,6 94,12 C100,10 108,13 109,21 C115,19 122,23 122,31 C128,30 134,35 133,42 C137,42 140,46 139,52 C137,57 132,60 127,59 L22,59 Z"/>
+  </svg>
+  <div class="rsv-seal reveal" id="rsvSeal">来</div>
+  <h2 class="rsv-head reveal">Secure<br><em style="font-style:italic;color:#4A3820">Your Table</em></h2>
+  <p class="rsv-sub reveal">Dinner service Thursday through Sunday. Tasting menus for parties of four and above.</p>
+  <div class="rsv-form">
+    <input id="rName" class="rsv-inp reveal" type="text" placeholder="Name" autocomplete="name">
+    <input id="rDate" class="rsv-inp reveal" type="text" placeholder="Date">
+    <input id="rGuests" class="rsv-inp reveal" type="text" placeholder="Guests">
+  </div>
+  <button class="rsv-btn reveal" onclick="this.textContent='已发送 · Sent'"><span class="rsv-btn-zh">预约</span>Request Reservation</button>
+  <div class="rsv-hours reveal">Thursday – Sunday &nbsp;·&nbsp; 6pm – 11pm &nbsp;·&nbsp; 44 Silk Lane, London</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-logo">K O I</div>
+  <div class="ft-info">44 Silk Lane, London</div>
+  <div class="ft-info">© 2025 KOI Restaurant</div>
+</footer>
+
+<script>
+// ── PETAL SYSTEM ───────────────────────────────────────────────
+const PC=['#E8A0BC','#F4B8CC','#F8D2E4','#DC7FA8','#EFA0C0','#F0B0C8','#D480A8'];
+class Petal{
+  constructor(W,H){this.W=W;this.H=H;this.init(true)}
+  init(sp){
+    this.x=Math.random()*this.W;
+    this.y=sp?Math.random()*this.H:(-12-Math.random()*50);
+    this.vx=(Math.random()-.5)*1.2;this.vy=.7+Math.random()*1.4;
+    this.a=Math.random()*Math.PI*2;this.va=(Math.random()-.5)*.07;
+    this.r=5+Math.random()*9;this.al=.3+Math.random()*.5;
+    this.col=PC[Math.floor(Math.random()*PC.length)];
+    this.sw=Math.random()*Math.PI*2;this.ss=.012+Math.random()*.018;
+    this.fl=Math.random()>.4;
+  }
+  upd(){
+    this.sw+=this.ss;this.vx+=Math.sin(this.sw)*.025;
+    this.vx=Math.max(-2,Math.min(2,this.vx));
+    this.x+=this.vx;this.y+=this.vy;this.a+=this.va;
+    if(this.y>this.H+20)this.init(false);
+  }
+  draw(ctx){
+    ctx.save();ctx.globalAlpha=this.al;ctx.translate(this.x,this.y);ctx.rotate(this.a);ctx.fillStyle=this.col;
+    if(this.fl){
+      for(let i=0;i<5;i++){ctx.save();ctx.rotate(i*Math.PI*2/5);ctx.beginPath();ctx.ellipse(0,-this.r*.55,this.r*.34,this.r*.6,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+      ctx.fillStyle='#C46820';ctx.globalAlpha=this.al*.6;ctx.beginPath();ctx.arc(0,0,this.r*.13,0,Math.PI*2);ctx.fill();
+    }else{ctx.beginPath();ctx.ellipse(0,0,this.r*.48,this.r,0,0,Math.PI*2);ctx.fill()}
+    ctx.restore();
+  }
+}
+function mkPetals(id,n){
+  const c=document.getElementById(id);if(!c)return;
+  c.width=c.parentElement.offsetWidth||window.innerWidth;
+  c.height=c.parentElement.offsetHeight||window.innerHeight;
+  const ctx=c.getContext('2d');
+  const ps=Array.from({length:n},()=>new Petal(c.width,c.height));
+  (function lp(){ctx.clearRect(0,0,c.width,c.height);ps.forEach(p=>{p.upd();p.draw(ctx)});requestAnimationFrame(lp)})();
+}
+
+// ── CHINESE WAVE IMAGE — multi-layer parallax scroll ──────────
+function initWaves(){
+  const cv=document.getElementById('waveCanvas');if(!cv)return;
+  const resize=()=>{cv.width=cv.parentElement.offsetWidth||window.innerWidth;cv.height=cv.parentElement.offsetHeight||window.innerHeight};
+  resize();
+  const ctx=cv.getContext('2d');
+  const img=new Image();
+  img.src='wave.png';
+  const LAYERS=[
+    {hf:.38,yf:.99,spd:.4,al:1},
+    {hf:.60,yf:.99,spd:.9,al:1},
+    {hf:.87,yf:.99,spd:1.5,al:1},
+  ];
+  const offsets=[0,0,0];
+  img.onload=()=>{
+    const ar=img.naturalWidth/img.naturalHeight;
+    function frame(){
+      const pw=cv.parentElement.offsetWidth||window.innerWidth;
+      const ph=cv.parentElement.offsetHeight||window.innerHeight;
+      if(cv.width!==pw)cv.width=pw;
+      if(cv.height!==ph)cv.height=ph;
+      const W=cv.width,H=cv.height;
+      if(W<=0||H<=0){requestAnimationFrame(frame);return;}
+      ctx.fillStyle='#09111E';ctx.fillRect(0,0,W,H);
+      LAYERS.forEach((l,i)=>{
+        const iH=H*l.hf,iW=iH*ar;
+        if(iW<=0){return;}
+        offsets[i]=(offsets[i]+l.spd)%iW;
+        const y=H*l.yf-iH;
+        ctx.globalAlpha=l.al;
+        for(let x=-offsets[i];x<W+iW;x+=iW)ctx.drawImage(img,x,y,iW,iH);
+      });
+      ctx.globalAlpha=1;
+      requestAnimationFrame(frame);
+    }
+    frame();
+  };
+  img.onerror=()=>{ctx.fillStyle='#09111E';ctx.fillRect(0,0,cv.width,cv.height);};
+}
+
+// ── GSAP SETUP ─────────────────────────────────────────────────
+function boot(){
+  gsap.registerPlugin(ScrollTrigger);
+
+  // ── HERO ENTRANCE ──
+  const tl=gsap.timeline({delay:.15});
+  tl.from('#hEyebrow',{opacity:0,y:16,duration:.8,ease:'power2.out'})
+    .from('#hKoi',{opacity:0,y:80,duration:1.4,ease:'power3.out',filter:'blur(14px)'},'-.4')
+    .from('#hZh',{opacity:0,y:20,duration:.9,ease:'power2.out'},'-.7')
+    .from('#hTagline',{opacity:0,y:18,duration:.8,ease:'power2.out'},'-.5')
+    .from('#hCta',{opacity:0,y:18,duration:.8,ease:'power2.out'},'-.4')
+    .from('.seal-stamp',{opacity:0,scale:.5,stagger:.12,duration:.6,ease:'back.out(2)'},'-.4')
+    .from('.blossom-branch',{opacity:0,x:-40,duration:1.2,ease:'power2.out'},'-.8')
+    .from('.cloud-a,.cloud-b,.cloud-c',{opacity:0,stagger:.15,duration:.8,ease:'power2.out'},'-.6')
+    .from('#heroDragonWrap',{opacity:0,x:60,duration:1.4,ease:'power2.out'},'-.6');
+
+  // ── PARALLAX SCRUBS ──
+  gsap.to('#heroGlyph',{scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1.5},y:-200,scale:1.15,opacity:0});
+  gsap.to('#hzWater',{scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:2},y:-120});
+  gsap.to('#heroDragonWrap',{scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:1.2},y:-80,x:30});
+  gsap.to('#storyGlyph',{scrollTrigger:{trigger:'.story-section',start:'top bottom',end:'bottom top',scrub:1.8},y:-130,x:22});
+  gsap.to('.story-brush',{scrollTrigger:{trigger:'.story-section',start:'top bottom',end:'top center',scrub:1},scaleX:1.3});
+
+  // ── HELPERS ──
+  function splitChars(el){
+    const nodes=[];const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT);
+    let n;while(n=w.nextNode())nodes.push(n);
+    nodes.forEach(tn=>{
+      const f=document.createDocumentFragment();
+      [...tn.textContent].forEach(ch=>{
+        if(ch===' '){f.appendChild(document.createTextNode(' '));return;}
+        const s=document.createElement('span');s.className='char';s.style.display='inline-block';s.textContent=ch;
+        f.appendChild(s);
+      });
+      tn.parentNode.replaceChild(f,tn);
+    });
+  }
+  function onEnterOnce(el,cb,thresh=0.15){
+    if(!el)return;
+    const io=new IntersectionObserver(([e])=>{if(e.isIntersecting){cb(el);io.disconnect();}},{threshold:thresh});
+    io.observe(el);
+  }
+
+  // ── WAVE SECTION ──
+  gsap.set('#wHL',{y:24,filter:'blur(8px)'});
+  gsap.set('#wSub',{y:12});
+  onEnterOnce(document.querySelector('.wave-section'),()=>{
+    gsap.fromTo('#wS1',{y:-140,opacity:0,scale:1.8,rotateZ:-12},{y:0,opacity:1,scale:1,rotateZ:0,duration:1,ease:'elastic.out(1,.5)',delay:.1});
+    gsap.fromTo('#wS2',{y:-140,opacity:0,scale:1.8,rotateZ:8}, {y:0,opacity:1,scale:1,rotateZ:0,duration:1,ease:'elastic.out(1,.5)',delay:.55});
+    gsap.fromTo('#wS3',{y:-140,opacity:0,scale:1.8,rotateZ:-6},{y:0,opacity:1,scale:1,rotateZ:0,duration:1,ease:'elastic.out(1,.5)',delay:1.0});
+    gsap.to('#wHL',{opacity:1,y:0,filter:'blur(0px)',duration:1.2,ease:'power3.out',delay:1.55});
+    gsap.to('#wSub',{opacity:1,y:0,duration:1,ease:'power2.out',delay:1.85});
+  },0.3);
+
+  // ── STORY heading — char scatter ──
+  const sh=document.getElementById('storyHead');
+  onEnterOnce(sh,el=>{
+    splitChars(el);
+    gsap.from(el.querySelectorAll('.char'),{opacity:0,y:60,rotateZ:()=>(Math.random()-.5)*18,stagger:.04,duration:.7,ease:'back.out(1.5)'});
+  },0.3);
+
+  // ── MENU heading — 3D char flip ──
+  const mh=document.querySelector('.menu-head');
+  if(mh){mh.classList.remove('reveal');}
+  onEnterOnce(mh,el=>{
+    splitChars(el);
+    gsap.from(el.querySelectorAll('.char'),{opacity:0,rotateX:90,y:20,stagger:.05,duration:.65,ease:'back.out(1.8)',transformOrigin:'50% 100%',transformPerspective:600});
+  },0.3);
+
+  // ── HERALD + INK-CIRCLE REVEAL ──
+  const $H=Object.assign(document.createElement('div'),{id:'secHerald'});
+  Object.assign($H.style,{position:'fixed',inset:'0',zIndex:'999',background:'#09060C',
+    display:'flex',alignItems:'center',justifyContent:'center',
+    pointerEvents:'none',opacity:'0',overflow:'hidden'});
+  const $G=document.createElement('div');
+  Object.assign($G.style,{fontFamily:'"Ma Shan Zheng",serif',
+    fontSize:'clamp(28vw,44vw,540px)',color:'#EBE0CC',
+    opacity:'0',lineHeight:'1',userSelect:'none'});
+  $H.appendChild($G);document.body.appendChild($H);
+
+  [{sel:'.story-section',g:'道',o:'28% 62%'},
+   {sel:'.menu-section', g:'菜',o:'72% 38%'},
+   {sel:'.exp-section',  g:'体',o:'50% 50%'},
+   {sel:'.rsv-section',  g:'来',o:'42% 58%'},
+  ].forEach(({sel,g,o})=>{
+    const sec=document.querySelector(sel);if(!sec)return;
+    gsap.set(sec,{clipPath:`circle(0% at ${o})`});
+    onEnterOnce(sec,e=>{
+      gsap.killTweensOf([$H,$G]);
+      $G.textContent=g;
+      gsap.timeline()
+        .set($H,{opacity:0})
+        .to($H,{opacity:1,duration:.28,ease:'power2.in'})
+        .fromTo($G,{scale:2.4,opacity:0},{scale:1,opacity:.85,duration:.42,ease:'power3.out'},'<.08')
+        .to($H,{opacity:0,duration:.52,ease:'power2.out'},'+=.18')
+        .to(e,{clipPath:`circle(150% at ${o})`,duration:1.25,ease:'power2.out',
+               onComplete:()=>gsap.set(e,{clearProps:'clipPath'})},'<-.32');
+    },.01);
+  });
+
+  // ── SEAL HIDDEN; bounces in below ──
+  gsap.set('#rsvSeal',{opacity:0});
+
+  // ── SECTION GLYPH ENTRANCES ──
+  [{sel:'#storyGlyph',s:2.0,op:.038,rz:-6},
+   {sel:'.menu-bg-text',s:1.7,op:.02,rz:-18},
+   {sel:'.exp-ghost',s:3.2,op:.025,rz:0},
+   {sel:'.rsv-bg-zh',s:2.4,op:.022,rz:12},
+  ].forEach(({sel,s,op,rz})=>{
+    onEnterOnce(document.querySelector(sel),el=>{
+      gsap.fromTo(el,{scale:s,opacity:0,rotateZ:rz},{scale:1,opacity:op,rotateZ:0,duration:2.2,ease:'power2.out'});
+    },0.05);
+  });
+
+  // ── MENU STAMP-IN ──
+  onEnterOnce(document.querySelector('.menu-grid'),()=>{
+    gsap.from('.stamp-item',{opacity:0,scale:1.25,rotateZ:()=>(Math.random()-.5)*6,stagger:.1,duration:.65,ease:'back.out(1.8)'});
+  },0.15);
+
+  // ── EXPERIENCE CARDS ──
+  onEnterOnce(document.querySelector('.exp-grid'),()=>{
+    gsap.fromTo('#eCard1',{x:-80,rotateX:20,opacity:0},{x:0,rotateX:0,opacity:1,duration:1,ease:'power3.out'});
+    gsap.to('#eCard2',{opacity:1,y:0,duration:1.1,ease:'power3.out',delay:.15});
+    gsap.fromTo('#eCard3',{x:80,rotateX:20,opacity:0},{x:0,rotateX:0,opacity:1,duration:1,ease:'power3.out',delay:.3});
+  },0.15);
+
+  // ── RESERVATION SEAL BOUNCE ──
+  onEnterOnce(document.getElementById('rsvSeal'),el=>{
+    gsap.fromTo(el,{scale:4,opacity:0,rotateZ:35},{scale:1,opacity:.8,rotateZ:-7,duration:1,ease:'elastic.out(1,.4)'});
+  },0.5);
+
+  // ── AMBIENT GLOW PULSE ──
+  gsap.to('.menu-glow-a',{scale:1.25,opacity:.12,duration:5,ease:'sine.inOut',repeat:-1,yoyo:true});
+  gsap.to('.menu-glow-b',{scale:1.3,opacity:.1,duration:6.5,ease:'sine.inOut',repeat:-1,yoyo:true,delay:2});
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',()=>{
+  mkPetals('petalCanvas',65);
+  mkPetals('expPetalCanvas',32);
+  initWaves();
+  if(window.gsap&&window.ScrollTrigger)boot();
+  else window.addEventListener('load',boot);
+});
+window.addEventListener('resize',()=>{
+  ['petalCanvas','expPetalCanvas'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.width=el.parentElement.offsetWidth||window.innerWidth;el.height=el.parentElement.offsetHeight||window.innerHeight}
+  });
+});
+</script>
+
+</body></html>
